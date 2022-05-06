@@ -36,7 +36,7 @@ abstract contract ERC721OneOfOneMintExtension is
         override(ERC721, ERC721URIStorage)
         returns (string memory)
     {
-        return super.tokenURI(tokenId);
+        return ERC721URIStorage.tokenURI(tokenId);
     }
 
     function _burn(uint256 tokenId)
@@ -44,6 +44,6 @@ abstract contract ERC721OneOfOneMintExtension is
         virtual
         override(ERC721, ERC721URIStorage)
     {
-        return super._burn(tokenId);
+        return ERC721URIStorage._burn(tokenId);
     }
 }

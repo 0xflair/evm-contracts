@@ -11,6 +11,6 @@ abstract contract ERC721SimpleProceedsExtension is Ownable {
     function withdraw() external onlyOwner {
         uint256 balance = address(this).balance;
 
-        payable(msg.sender).transfer(balance);
+        payable(this.owner()).transfer(balance);
     }
 }

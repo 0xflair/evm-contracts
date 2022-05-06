@@ -6,17 +6,19 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 import "../extensions/ERC721CollectionMetadataExtension.sol";
-import "../extensions/ERC721PrefixedMetadataExtension.sol";
+import "../extensions/ERC721PerTokenMetadataExtension.sol";
+import "../extensions/ERC721OneOfOneMintExtension.sol";
 import "../extensions/ERC721AutoIdMinterExtension.sol";
 import "../extensions/ERC721OwnerMintExtension.sol";
 
-contract ERC721SimpleCollection is
+contract ERC721SimpleOneOfOneCollection is
     Ownable,
     ERC721,
-    ERC721CollectionMetadataExtension,
-    ERC721PrefixedMetadataExtension,
     ERC721AutoIdMinterExtension,
-    ERC721OwnerMintExtension
+    ERC721CollectionMetadataExtension,
+    ERC721OwnerMintExtension,
+    ERC721PerTokenMetadataExtension,
+    ERC721OneOfOneMintExtension
 {
     constructor(
         string memory name,
@@ -27,7 +29,8 @@ contract ERC721SimpleCollection is
     )
         ERC721(name, symbol)
         ERC721CollectionMetadataExtension(contractURI)
-        ERC721PrefixedMetadataExtension(placeholderURI)
+        ERC721PerTokenMetadataExtension()
+        ERC721OneOfOneMintExtension()
         ERC721AutoIdMinterExtension(maxSupply)
     {}
 
@@ -37,10 +40,18 @@ contract ERC721SimpleCollection is
         public
         view
         virtual
-        override(ERC721, ERC721PrefixedMetadataExtension)
+        override(ERC721, ERC721OneOfOneMintExtension, ERC721URIStorage)
         returns (string memory)
     {
-        return ERC721PrefixedMetadataExtension.tokenURI(_tokenId);
+        return ERC721OneOfOneMintExtension.tokenURI(_tokenId);
+    }
+
+    function _burn(uint256 tokenId)
+        internal
+        virtual
+        override(ERC721, ERC721OneOfOneMintExtension, ERC721URIStorage)
+    {
+        return ERC721OneOfOneMintExtension._burn(tokenId);
     }
 
     function getInfo()
@@ -54,8 +65,8 @@ contract ERC721SimpleCollection is
     {
         uint256 balance = 0;
 
-        if (msg.sender != address(0)) {
-            balance = this.balanceOf(msg.sender);
+        if (_msgSender() != address(0)) {
+            balance = this.balanceOf(_msgSender());
         }
 
         return (maxSupply, this.totalSupply(), balance);

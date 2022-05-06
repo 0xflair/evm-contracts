@@ -15,6 +15,8 @@ import "../extensions/ERC721SimpleProceedsExtension.sol";
 import "../extensions/ERC721RoleBasedMintExtension.sol";
 import "../extensions/ERC721RoyaltyExtension.sol";
 import "../extensions/ERC721BulkifyExtension.sol";
+import "../extensions/ERC721OpenSeaNoGasWyvernExtension.sol";
+import "../extensions/ERC721OpenSeaNoGasZeroExExtension.sol";
 
 contract ERC721FullFeaturedCollection is
     Ownable,
@@ -28,7 +30,9 @@ contract ERC721FullFeaturedCollection is
     ERC721SimpleProceedsExtension,
     ERC721RoleBasedMintExtension,
     ERC721RoyaltyExtension,
-    ERC721BulkifyExtension
+    ERC721BulkifyExtension,
+    ERC721OpenSeaNoGasWyvernExtension,
+    ERC721OpenSeaNoGasZeroExExtension
 {
     struct Config {
         string name;
@@ -42,6 +46,8 @@ contract ERC721FullFeaturedCollection is
         uint256 publicSaleMaxMintPerTx;
         address defaultRoyaltyAddress;
         uint16 defaultRoyaltyBps;
+        address openSeaProxyRegistryAddress;
+        address openSeaExchangeAddress;
     }
 
     constructor(Config memory config)
@@ -61,6 +67,8 @@ contract ERC721FullFeaturedCollection is
             config.defaultRoyaltyAddress,
             config.defaultRoyaltyBps
         )
+        ERC721OpenSeaNoGasWyvernExtension(config.openSeaProxyRegistryAddress)
+        ERC721OpenSeaNoGasZeroExExtension(config.openSeaExchangeAddress)
     {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(MINTER_ROLE, _msgSender());
@@ -76,6 +84,22 @@ contract ERC721FullFeaturedCollection is
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
+    }
+
+    /**
+     * Override isApprovedForAll to whitelist user's OpenSea proxy accounts to enable gas-less listings.
+     */
+    function isApprovedForAll(address owner, address operator)
+        public
+        view
+        override(
+            ERC721,
+            ERC721OpenSeaNoGasWyvernExtension,
+            ERC721OpenSeaNoGasZeroExExtension
+        )
+        returns (bool)
+    {
+        return super.isApprovedForAll(owner, operator);
     }
 
     function tokenURI(uint256 _tokenId)
@@ -107,7 +131,7 @@ contract ERC721FullFeaturedCollection is
         uint256 balance = 0;
 
         if (msg.sender != address(0)) {
-            balance = this.balanceOf(msg.sender);
+            balance = this.balanceOf(_msgSender());
         }
 
         return (
@@ -116,7 +140,7 @@ contract ERC721FullFeaturedCollection is
             balance,
             preSalePrice,
             preSaleMaxMintPerWallet,
-            preSaleAllowlistClaimed[msg.sender],
+            preSaleAllowlistClaimed[_msgSender()],
             preSaleStatus,
             publicSalePrice,
             publicSaleMaxMintPerTx,

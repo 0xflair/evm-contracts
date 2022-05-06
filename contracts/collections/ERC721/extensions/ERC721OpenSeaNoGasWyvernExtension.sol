@@ -33,13 +33,15 @@ abstract contract ERC721OpenSeaNoGasWyvernExtension is Ownable, ERC721 {
         override
         returns (bool)
     {
-        // Whitelist OpenSea proxy contract for easy trading.
-        ProxyRegistry proxyRegistry = ProxyRegistry(
-            _openSeaProxyRegistryAddress
-        );
+        if (_openSeaProxyRegistryAddress != address(0)) {
+            // Whitelist OpenSea proxy contract for easy trading.
+            ProxyRegistry proxyRegistry = ProxyRegistry(
+                _openSeaProxyRegistryAddress
+            );
 
-        if (address(proxyRegistry.proxies(owner)) == operator) {
-            return true;
+            if (address(proxyRegistry.proxies(owner)) == operator) {
+                return true;
+            }
         }
 
         return super.isApprovedForAll(owner, operator);

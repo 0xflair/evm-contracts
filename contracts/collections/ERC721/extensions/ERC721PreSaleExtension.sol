@@ -72,7 +72,7 @@ abstract contract ERC721PreSaleExtension is
             MerkleProof.verify(
                 proof,
                 preSaleAllowlistMerkleRoot,
-                _generateMerkleLeaf(msg.sender)
+                _generateMerkleLeaf(to)
             ),
             "PRE_SALE_WRONG_PROOF"
         );
