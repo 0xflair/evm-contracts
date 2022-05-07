@@ -25,7 +25,7 @@ abstract contract ERC721PerTokenMetadataExtension is Ownable, ERC721URIStorage {
         external
         onlyOwner
     {
-        require(tokenId >= lastFrozenTokenId, "FROZEN_TOKEN");
+        require(tokenId > lastFrozenTokenId, "FROZEN_TOKEN");
         _setTokenURI(tokenId, tokenURI);
     }
 }

@@ -10,6 +10,7 @@ import "../extensions/ERC721PerTokenMetadataExtension.sol";
 import "../extensions/ERC721OneOfOneMintExtension.sol";
 import "../extensions/ERC721AutoIdMinterExtension.sol";
 import "../extensions/ERC721OwnerMintExtension.sol";
+import "../../../common/meta-transactions/UnorderedMetaTransactions.sol";
 
 contract ERC721SimpleOneOfOneCollection is
     Ownable,
@@ -18,20 +19,23 @@ contract ERC721SimpleOneOfOneCollection is
     ERC721CollectionMetadataExtension,
     ERC721OwnerMintExtension,
     ERC721PerTokenMetadataExtension,
-    ERC721OneOfOneMintExtension
+    ERC721OneOfOneMintExtension,
+    UnorderedMetaTransactions
 {
-    constructor(
-        string memory name,
-        string memory symbol,
-        string memory contractURI,
-        string memory placeholderURI,
-        uint256 maxSupply
-    )
-        ERC721(name, symbol)
-        ERC721CollectionMetadataExtension(contractURI)
+    struct Config {
+        string name;
+        string symbol;
+        string contractURI;
+        uint256 maxSupply;
+    }
+
+    constructor(Config memory config)
+        ERC721(config.name, config.symbol)
+        ERC721CollectionMetadataExtension(config.contractURI)
         ERC721PerTokenMetadataExtension()
         ERC721OneOfOneMintExtension()
-        ERC721AutoIdMinterExtension(maxSupply)
+        ERC721AutoIdMinterExtension(config.maxSupply)
+        UnorderedMetaTransactions()
     {}
 
     // PUBLIC
@@ -52,6 +56,26 @@ contract ERC721SimpleOneOfOneCollection is
         override(ERC721, ERC721OneOfOneMintExtension, ERC721URIStorage)
     {
         return ERC721OneOfOneMintExtension._burn(tokenId);
+    }
+
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(UnorderedMetaTransactions, Context)
+        returns (address sender)
+    {
+        return UnorderedMetaTransactions._msgSender();
+    }
+
+    function _msgData()
+        internal
+        view
+        virtual
+        override(UnorderedMetaTransactions, Context)
+        returns (bytes calldata)
+    {
+        return UnorderedMetaTransactions._msgData();
     }
 
     function getInfo()
