@@ -85,7 +85,7 @@ contract UnorderedForwarder is EIP712, ReentrancyGuard {
         nonReentrant
         doesNotReduceEthBalance
         refundsAttachedEth
-        returns (bool, bytes memory)
+        returns (bytes memory)
     {
         return _execute(mtx, signature);
     }
@@ -99,22 +99,21 @@ contract UnorderedForwarder is EIP712, ReentrancyGuard {
         nonReentrant
         doesNotReduceEthBalance
         refundsAttachedEth
-        returns (bool[] memory successes, bytes[] memory returnResults)
+        returns (bytes[] memory returnResults)
     {
         require(mtxs.length == signatures.length, "FWD_MISMATCH_SIGNATURES");
 
         returnResults = new bytes[](mtxs.length);
-        successes = new bool[](mtxs.length);
 
         for (uint256 i = 0; i < mtxs.length; ++i) {
-            (successes[i], returnResults[i]) = _execute(mtxs[i], signatures[i]);
+            returnResults[i] = _execute(mtxs[i], signatures[i]);
         }
     }
 
     function _execute(
         UnorderedMetaTransaction calldata mtx,
         bytes calldata signature
-    ) internal returns (bool, bytes memory) {
+    ) internal returns (bytes memory) {
         (bool valid, bytes32 mtxHash) = verify(mtx, signature);
 
         require(valid, "FWD_INVALID_SIGNATURE");
@@ -127,6 +126,6 @@ contract UnorderedForwarder is EIP712, ReentrancyGuard {
 
         require(success, "FWD_CALL_FAILED");
 
-        return (success, returndata);
+        return returndata;
     }
 }
