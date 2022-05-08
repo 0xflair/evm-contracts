@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -18,6 +18,18 @@ abstract contract ERC721OneOfOneMintExtension is
     // ADMIN
 
     function mintWithTokenURIsByOwner(
+        address to,
+        uint256 count,
+        string[] memory tokenURIs
+    ) external onlyOwner {
+        uint256 startingTokenId = _getNextTokenId();
+        _mintTo(to, count);
+        for (uint256 i = 0; i < count; i++) {
+            _setTokenURI(startingTokenId + i, tokenURIs[i]);
+        }
+    }
+
+    function mintWithTokenURIsByRole(
         address to,
         uint256 count,
         string[] memory tokenURIs

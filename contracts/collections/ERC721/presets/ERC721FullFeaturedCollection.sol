@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
 import "../extensions/ERC721CollectionMetadataExtension.sol";
 import "../extensions/ERC721PrefixedMetadataExtension.sol";
@@ -19,6 +20,7 @@ import "../extensions/ERC721OpenSeaNoGasWyvernExtension.sol";
 import "../extensions/ERC721OpenSeaNoGasZeroExExtension.sol";
 
 contract ERC721FullFeaturedCollection is
+    ERC2771Context,
     Ownable,
     ERC721,
     ERC721CollectionMetadataExtension,
@@ -48,6 +50,7 @@ contract ERC721FullFeaturedCollection is
         uint16 defaultRoyaltyBps;
         address openSeaProxyRegistryAddress;
         address openSeaExchangeAddress;
+        address trustedForwarder;
     }
 
     constructor(Config memory config)
@@ -69,9 +72,30 @@ contract ERC721FullFeaturedCollection is
         )
         ERC721OpenSeaNoGasWyvernExtension(config.openSeaProxyRegistryAddress)
         ERC721OpenSeaNoGasZeroExExtension(config.openSeaExchangeAddress)
+        ERC2771Context(config.trustedForwarder)
     {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(MINTER_ROLE, _msgSender());
+    }
+
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ERC2771Context, Context)
+        returns (address sender)
+    {
+        return super._msgSender();
+    }
+
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ERC2771Context, Context)
+        returns (bytes calldata)
+    {
+        return super._msgData();
     }
 
     // PUBLIC
@@ -130,7 +154,7 @@ contract ERC721FullFeaturedCollection is
     {
         uint256 balance = 0;
 
-        if (msg.sender != address(0)) {
+        if (_msgSender() != address(0)) {
             balance = this.balanceOf(_msgSender());
         }
 

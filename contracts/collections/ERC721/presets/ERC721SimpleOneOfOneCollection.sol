@@ -1,32 +1,33 @@
 // SPDX-License-Identifier: AGPL-3.0
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
 import "../extensions/ERC721CollectionMetadataExtension.sol";
 import "../extensions/ERC721PerTokenMetadataExtension.sol";
 import "../extensions/ERC721OneOfOneMintExtension.sol";
 import "../extensions/ERC721AutoIdMinterExtension.sol";
 import "../extensions/ERC721OwnerMintExtension.sol";
-import "../../../common/meta-transactions/UnorderedMetaTransactions.sol";
 
 contract ERC721SimpleOneOfOneCollection is
+    ERC2771Context,
     Ownable,
     ERC721,
     ERC721AutoIdMinterExtension,
     ERC721CollectionMetadataExtension,
     ERC721OwnerMintExtension,
     ERC721PerTokenMetadataExtension,
-    ERC721OneOfOneMintExtension,
-    UnorderedMetaTransactions
+    ERC721OneOfOneMintExtension
 {
     struct Config {
         string name;
         string symbol;
         string contractURI;
         uint256 maxSupply;
+        address trustedForwarder;
     }
 
     constructor(Config memory config)
@@ -35,20 +36,8 @@ contract ERC721SimpleOneOfOneCollection is
         ERC721PerTokenMetadataExtension()
         ERC721OneOfOneMintExtension()
         ERC721AutoIdMinterExtension(config.maxSupply)
-        UnorderedMetaTransactions()
+        ERC2771Context(config.trustedForwarder)
     {}
-
-    // PUBLIC
-
-    function tokenURI(uint256 _tokenId)
-        public
-        view
-        virtual
-        override(ERC721, ERC721OneOfOneMintExtension, ERC721URIStorage)
-        returns (string memory)
-    {
-        return ERC721OneOfOneMintExtension.tokenURI(_tokenId);
-    }
 
     function _burn(uint256 tokenId)
         internal
@@ -62,20 +51,32 @@ contract ERC721SimpleOneOfOneCollection is
         internal
         view
         virtual
-        override(UnorderedMetaTransactions, Context)
+        override(ERC2771Context, Context)
         returns (address sender)
     {
-        return UnorderedMetaTransactions._msgSender();
+        return super._msgSender();
     }
 
     function _msgData()
         internal
         view
         virtual
-        override(UnorderedMetaTransactions, Context)
+        override(ERC2771Context, Context)
         returns (bytes calldata)
     {
-        return UnorderedMetaTransactions._msgData();
+        return super._msgData();
+    }
+
+    // PUBLIC
+
+    function tokenURI(uint256 _tokenId)
+        public
+        view
+        virtual
+        override(ERC721, ERC721OneOfOneMintExtension, ERC721URIStorage)
+        returns (string memory)
+    {
+        return ERC721OneOfOneMintExtension.tokenURI(_tokenId);
     }
 
     function getInfo()
