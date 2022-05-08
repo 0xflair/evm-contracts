@@ -1,20 +1,20 @@
 /* eslint-disable camelcase */
 import { expect } from "chai";
 import { ethers, getUnnamedAccounts, getChainId } from "hardhat";
-import { ERC721SimpleOneOfOneCollection__factory } from "../../../typechain/factories/ERC721SimpleOneOfOneCollection__factory";
+import { ERC721OneOfOneCollection__factory } from "../../../typechain/factories/ERC721OneOfOneCollection__factory";
 import { UnorderedForwarder__factory } from "../../../typechain/factories/UnorderedForwarder__factory";
 import {
   signUnorderedMetaTransaction,
   UnorderedMetaTransaction,
 } from "../../utils/meta-transactions";
 
-describe("ERC721SimpleOneOfOneCollection", function () {
+describe("ERC721OneOfOneCollection", function () {
   it("should return collection info", async function () {
-    const ERC721SimpleOneOfOneCollection =
-      await ethers.getContractFactory<ERC721SimpleOneOfOneCollection__factory>(
-        "ERC721SimpleOneOfOneCollection"
+    const ERC721OneOfOneCollection =
+      await ethers.getContractFactory<ERC721OneOfOneCollection__factory>(
+        "ERC721OneOfOneCollection"
       );
-    const collection = await ERC721SimpleOneOfOneCollection.deploy({
+    const collection = await ERC721OneOfOneCollection.deploy({
       name: "Flair Angels",
       symbol: "ANGEL",
       contractURI: "ipfs://yyyyy",
@@ -27,11 +27,11 @@ describe("ERC721SimpleOneOfOneCollection", function () {
   });
 
   it("should mint 1 one-of-one token", async function () {
-    const ERC721SimpleOneOfOneCollection =
-      await ethers.getContractFactory<ERC721SimpleOneOfOneCollection__factory>(
-        "ERC721SimpleOneOfOneCollection"
+    const ERC721OneOfOneCollection =
+      await ethers.getContractFactory<ERC721OneOfOneCollection__factory>(
+        "ERC721OneOfOneCollection"
       );
-    const collection = await ERC721SimpleOneOfOneCollection.deploy({
+    const collection = await ERC721OneOfOneCollection.deploy({
       name: "Flair Angels",
       symbol: "ANGEL",
       contractURI: "ipfs://yyyyy",
@@ -56,11 +56,11 @@ describe("ERC721SimpleOneOfOneCollection", function () {
       );
     const forwarder = await (await UnorderedForwarder.deploy({})).deployed();
 
-    const ERC721SimpleOneOfOneCollection =
-      await ethers.getContractFactory<ERC721SimpleOneOfOneCollection__factory>(
-        "ERC721SimpleOneOfOneCollection"
+    const ERC721OneOfOneCollection =
+      await ethers.getContractFactory<ERC721OneOfOneCollection__factory>(
+        "ERC721OneOfOneCollection"
       );
-    const collection = await ERC721SimpleOneOfOneCollection.deploy({
+    const collection = await ERC721OneOfOneCollection.deploy({
       name: "Flair Angels",
       symbol: "ANGEL",
       contractURI: "ipfs://yyyyy",
@@ -112,11 +112,11 @@ describe("ERC721SimpleOneOfOneCollection", function () {
       );
     const forwarder = await (await UnorderedForwarder.deploy({})).deployed();
 
-    const ERC721SimpleOneOfOneCollection =
-      await ethers.getContractFactory<ERC721SimpleOneOfOneCollection__factory>(
-        "ERC721SimpleOneOfOneCollection"
+    const ERC721OneOfOneCollection =
+      await ethers.getContractFactory<ERC721OneOfOneCollection__factory>(
+        "ERC721OneOfOneCollection"
       );
-    const collection = await ERC721SimpleOneOfOneCollection.deploy({
+    const collection = await ERC721OneOfOneCollection.deploy({
       name: "Flair Angels",
       symbol: "ANGEL",
       contractURI: "ipfs://yyyyy",
@@ -161,96 +161,59 @@ describe("ERC721SimpleOneOfOneCollection", function () {
     expect(await collection.balanceOf(userA)).to.equal(0);
   });
 
-  // it("should failing minting 1 one-of-one token when not admin via meta transactions", async function () {
-  //   const ERC721SimpleOneOfOneCollection =
-  //     await ethers.getContractFactory<ERC721SimpleOneOfOneCollection__factory>(
-  //       "ERC721SimpleOneOfOneCollection"
-  //     );
-  //   const collection = await ERC721SimpleOneOfOneCollection.deploy({
-  //     name: "Flair Angels",
-  //     symbol: "ANGEL",
-  //     contractURI: "ipfs://yyyyy",
-  //     maxSupply: 8000,
-  //     trustedForwarder: "0x0000000000000000000000000000000000000000",
-  //   });
+  it("should failing minting 1 one-of-one token when impersonating admin via meta transactions", async function () {
+    const UnorderedForwarder =
+      await ethers.getContractFactory<UnorderedForwarder__factory>(
+        "UnorderedForwarder"
+      );
+    const forwarder = await (await UnorderedForwarder.deploy({})).deployed();
 
-  //   await collection.deployed();
+    const ERC721OneOfOneCollection =
+      await ethers.getContractFactory<ERC721OneOfOneCollection__factory>(
+        "ERC721OneOfOneCollection"
+      );
+    const collection = await ERC721OneOfOneCollection.deploy({
+      name: "Flair Angels",
+      symbol: "ANGEL",
+      contractURI: "ipfs://yyyyy",
+      maxSupply: 8000,
+      trustedForwarder: forwarder.address,
+    });
 
-  //   const chainId = await getChainId();
-  //   const [, userA, userB] = await getUnnamedAccounts();
+    await collection.deployed();
 
-  //   const signerA = await ethers.getSigner(userA);
+    const chainId = await getChainId();
+    const [deployer, userA, userB] = await getUnnamedAccounts();
 
-  //   const callData = collection.interface.encodeFunctionData(
-  //     "mintWithTokenURIsByOwner",
-  //     [userB, 2, ["ipfs://zzzzz", "ipfs://wwwwww"]]
-  //   );
+    const signerA = await ethers.getSigner(userA);
 
-  //   const metaTransaction = {
-  //     signer: userA,
-  //     callData,
-  //     expiresAt: Math.floor(Date.now() / 1000 + 1000),
-  //     minGasPrice: 0,
-  //     maxGasPrice: 1000000000,
-  //     salt: Math.floor(Math.random() * 1000000000),
-  //     value: 0,
-  //   };
+    const data = collection.interface.encodeFunctionData(
+      "mintWithTokenURIsByOwner",
+      [userB, 2, ["ipfs://zzzzz", "ipfs://wwwwww"]]
+    );
 
-  //   const signature = await signUnorderedMetaTransaction(
-  //     signerA,
-  //     Number(chainId),
-  //     metaTransaction,
-  //     collection.address
-  //   );
+    const metaTransaction: UnorderedMetaTransaction = {
+      from: deployer,
+      to: collection.address,
+      value: 0,
+      minGasPrice: 0,
+      maxGasPrice: 1000000000,
+      expiresAt: Math.floor(Date.now() / 1000 + 1000),
+      nonce: Math.floor(Math.random() * 1000000000),
+      data,
+    };
 
-  //   await expect(
-  //     collection.batchExecuteMetaTransactions([metaTransaction], [signature])
-  //   ).to.be.revertedWith("MTX_CALL_FAILED");
-  // });
+    const signature = await signUnorderedMetaTransaction(
+      signerA,
+      Number(chainId),
+      metaTransaction,
+      forwarder.address
+    );
 
-  // it("should failing minting 1 one-of-one token when impersonating admin via meta transactions", async function () {
-  //   const ERC721SimpleOneOfOneCollection =
-  //     await ethers.getContractFactory<ERC721SimpleOneOfOneCollection__factory>(
-  //       "ERC721SimpleOneOfOneCollection"
-  //     );
-  //   const collection = await ERC721SimpleOneOfOneCollection.deploy({
-  //     name: "Flair Angels",
-  //     symbol: "ANGEL",
-  //     contractURI: "ipfs://yyyyy",
-  //     maxSupply: 8000,
-  //   });
+    await expect(
+      forwarder.batchExecute([metaTransaction], [signature])
+    ).to.be.revertedWith("FWD_INVALID_SIGNATURE");
 
-  //   await collection.deployed();
-
-  //   const chainId = await getChainId();
-  //   const [deployer, userA, userB] = await getUnnamedAccounts();
-
-  //   const signerA = await ethers.getSigner(userA);
-
-  //   const callData = collection.interface.encodeFunctionData(
-  //     "mintWithTokenURIsByOwner",
-  //     [userB, 2, ["ipfs://zzzzz", "ipfs://wwwwww"]]
-  //   );
-
-  //   const metaTransaction = {
-  //     signer: deployer,
-  //     callData,
-  //     expiresAt: Math.floor(Date.now() / 1000 + 1000),
-  //     minGasPrice: 0,
-  //     maxGasPrice: 1000000000,
-  //     salt: Math.floor(Math.random() * 1000000000),
-  //     value: 0,
-  //   };
-
-  //   const signature = await signUnorderedMetaTransaction(
-  //     signerA,
-  //     Number(chainId),
-  //     metaTransaction,
-  //     collection.address
-  //   );
-
-  //   await expect(
-  //     collection.batchExecuteMetaTransactions([metaTransaction], [signature])
-  //   ).to.be.revertedWith("MTX_INVALID_SIGNATURE");
-  // });
+    expect(await collection.balanceOf(userA)).to.equal(0);
+  });
 });

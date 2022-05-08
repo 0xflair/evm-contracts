@@ -12,7 +12,7 @@ import "../extensions/ERC721OneOfOneMintExtension.sol";
 import "../extensions/ERC721AutoIdMinterExtension.sol";
 import "../extensions/ERC721OwnerMintExtension.sol";
 
-contract ERC721SimpleOneOfOneCollection is
+contract ERC721OneOfOneCollection is
     ERC2771Context,
     Ownable,
     ERC721,
