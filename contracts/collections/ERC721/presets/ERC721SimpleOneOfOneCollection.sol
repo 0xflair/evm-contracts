@@ -69,6 +69,16 @@ contract ERC721SimpleOneOfOneCollection is
 
     // PUBLIC
 
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC721, ERC721OneOfOneMintExtension)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }
+
     function tokenURI(uint256 _tokenId)
         public
         view
