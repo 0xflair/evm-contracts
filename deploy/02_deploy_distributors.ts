@@ -1,5 +1,7 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { DeployFunction } from "hardhat-deploy/types";
+import { DeployFunction, DeployResult } from "hardhat-deploy/types";
+
+import { deployUpgradableContract } from "../hardhat.util";
 
 export const delayMs = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));
@@ -7,12 +9,13 @@ export const delayMs = (ms: number) =>
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const accounts = await hre.getUnnamedAccounts();
 
-  const contract = await hre.deployments.deploy("UnorderedForwarder", {
-    from: accounts[0],
-    args: [],
-    log: true,
-    estimateGasExtra: 1000000,
-  });
+  const contract = (await deployUpgradableContract(
+    hre.deployments,
+    accounts[0],
+    accounts[0],
+    "ERC721LinearAutomaticDistributor",
+    []
+  )) as DeployResult;
 
   if (hre.network.name === "hardhat") {
     return;
