@@ -252,10 +252,10 @@ contract ERC721LinearAutomaticDistributor is
 
         /* EFFECTS */
 
-        streamUsed[streamId] += releasedAmount;
-
         entitlements[streamId][ticketTokenId].totalClaimed += releasedAmount;
         entitlements[streamId][ticketTokenId].lastClaimedAt = block.timestamp;
+
+        streamUsed[streamId] += releasedAmount;
 
         /* INTERACTIONS */
 
@@ -317,12 +317,12 @@ contract ERC721LinearAutomaticDistributor is
             );
 
             if (claimableAmount > 0) {
-                totalClaimableAmount += claimableAmount;
-
                 entitlements[streamId][ticketTokenIds[i]]
                     .totalClaimed += claimableAmount;
                 entitlements[streamId][ticketTokenIds[i]].lastClaimedAt = block
                     .timestamp;
+
+                totalClaimableAmount += claimableAmount;
             }
         }
 
