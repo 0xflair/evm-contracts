@@ -520,14 +520,14 @@ describe("ERC721LinearAutomaticDistributor", function () {
       );
 
       // Top-up
-      await userA.TestERC20.mint(userA.signer.address, utils.parseEther("8"));
+      await userA.TestERC20.mint(userA.signer.address, utils.parseEther("24"));
       await userA.TestERC20.approve(
         userA.ERC721LinearAutomaticDistributor.address,
-        utils.parseEther("8")
+        utils.parseEther("24")
       );
       await userA.ERC721LinearAutomaticDistributor.topUp(
         1,
-        utils.parseEther("8")
+        utils.parseEther("24")
       );
 
       // Mint NFT
@@ -536,18 +536,18 @@ describe("ERC721LinearAutomaticDistributor", function () {
 
       // Wait & Claim
       await increaseTime(3 * 24 * 60 * 60); // 3 day
-      await userB.ERC721LinearAutomaticDistributor.claim(1, 1234);
+      await userB.ERC721LinearAutomaticDistributor.claimBulk(1, [1234, 5678]);
       await increaseTime(2 * 24 * 60 * 60); // 2 day
-      await userB.ERC721LinearAutomaticDistributor.claim(1, 1234);
+      await userB.ERC721LinearAutomaticDistributor.claimBulk(1, [1234, 5678]);
 
       // Wait
       await increaseTime(8 * 24 * 60 * 60); // 8 day
 
       // Claim
-      await userB.ERC721LinearAutomaticDistributor.claim(1, 1234);
+      await userB.ERC721LinearAutomaticDistributor.claimBulk(1, [1234, 5678]);
 
       expect(await userB.TestERC20.balanceOf(userB.signer.address)).to.equal(
-        utils.parseEther("6")
+        utils.parseEther("24")
       );
     });
   });
