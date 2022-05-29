@@ -78,13 +78,15 @@ const deployPermanentContract = async (
   additionalOptions = {}
 ) => {
   const { deploy } = deployments;
-  await deploy(name, {
+  const result = await deploy(name, {
     from,
     args,
     log: true,
     estimateGasExtra: 1000000,
     ...additionalOptions,
   });
+
+  return hre.ethers.getContractAt(name, result.address);
 };
 
 module.exports = {
