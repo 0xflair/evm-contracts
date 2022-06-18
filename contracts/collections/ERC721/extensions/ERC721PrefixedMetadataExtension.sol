@@ -3,9 +3,12 @@
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Storage.sol";
+
+import "./ERC721CollectionMetadataExtension.sol";
 
 interface ERC721PrefixedMetadataExtensionInterface {
     function setPlaceholderURI(string memory newValue) external;
@@ -28,21 +31,30 @@ interface ERC721PrefixedMetadataExtensionInterface {
  *      It also allows configuring a fallback "placeholder" URI when prefix is not set yet.
  */
 abstract contract ERC721PrefixedMetadataExtension is
+    Initializable,
     Ownable,
     ERC165Storage,
-    ERC721,
     ERC721PrefixedMetadataExtensionInterface
 {
     string private _placeholderURI;
     string private _baseTokenURI;
     bool private _baseURIFrozen;
 
-    constructor(string memory placeholderURI_) {
+    function __ERC721PrefixedMetadataExtension_init(
+        string memory placeholderURI_
+    ) internal onlyInitializing {
+        __ERC721PrefixedMetadataExtension_init_unchained(placeholderURI_);
+    }
+
+    function __ERC721PrefixedMetadataExtension_init_unchained(
+        string memory placeholderURI_
+    ) internal onlyInitializing {
         _placeholderURI = placeholderURI_;
 
         _registerInterface(
             type(ERC721PrefixedMetadataExtensionInterface).interfaceId
         );
+        _registerInterface(type(IERC721Metadata).interfaceId);
     }
 
     // ADMIN
@@ -66,7 +78,7 @@ abstract contract ERC721PrefixedMetadataExtension is
         public
         view
         virtual
-        override(ERC165Storage, ERC721)
+        override(ERC165Storage)
         returns (bool)
     {
         return ERC165Storage.supportsInterface(interfaceId);
@@ -84,7 +96,7 @@ abstract contract ERC721PrefixedMetadataExtension is
         public
         view
         virtual
-        override(ERC721, ERC721PrefixedMetadataExtensionInterface)
+        override(ERC721PrefixedMetadataExtensionInterface)
         returns (string memory)
     {
         return

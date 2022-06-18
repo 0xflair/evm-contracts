@@ -22,7 +22,16 @@ abstract contract ERC721RoleBasedMintExtension is
 {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
-    constructor() {
+    function __ERC721RoleBasedMintExtension_init() internal onlyInitializing {
+        __ERC721RoleBasedMintExtension_init_unchained();
+
+        _setupRole(MINTER_ROLE, _msgSender());
+    }
+
+    function __ERC721RoleBasedMintExtension_init_unchained()
+        internal
+        onlyInitializing
+    {
         _registerInterface(
             type(ERC721RoleBasedMintExtensionInterface).interfaceId
         );

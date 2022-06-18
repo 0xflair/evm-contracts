@@ -3,6 +3,7 @@
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Storage.sol";
 
@@ -22,6 +23,7 @@ interface ERC721PublicSaleExtensionInterface {
  * @dev Extension to provide pre-sale and public-sale capabilities for colelctors to mint for a specific price.
  */
 abstract contract ERC721PublicSaleExtension is
+    Initializable,
     Ownable,
     ERC165Storage,
     ERC721AutoIdMinterExtension,
@@ -32,7 +34,20 @@ abstract contract ERC721PublicSaleExtension is
     uint256 public publicSaleMaxMintPerTx;
     bool public publicSaleStatus;
 
-    constructor(uint256 _publicSalePrice, uint256 _publicSaleMaxMintPerTx) {
+    function __ERC721PublicSaleExtension_init(
+        uint256 _publicSalePrice,
+        uint256 _publicSaleMaxMintPerTx
+    ) internal onlyInitializing {
+        __ERC721PublicSaleExtension_init_unchained(
+            _publicSalePrice,
+            _publicSaleMaxMintPerTx
+        );
+    }
+
+    function __ERC721PublicSaleExtension_init_unchained(
+        uint256 _publicSalePrice,
+        uint256 _publicSaleMaxMintPerTx
+    ) internal onlyInitializing {
         publicSalePrice = _publicSalePrice;
         publicSaleMaxMintPerTx = _publicSaleMaxMintPerTx;
 

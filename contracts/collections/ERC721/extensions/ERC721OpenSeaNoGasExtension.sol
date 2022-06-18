@@ -3,7 +3,8 @@
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Storage.sol";
 
 import "../../../misc/opensea/ProxyRegistry.sol";
@@ -23,18 +24,29 @@ interface ERC721OpenSeaNoGasExtensionInterface {
  * @dev Extension that automatically approves OpenSea to avoid having users to "Approve" your collection before trading.
  */
 abstract contract ERC721OpenSeaNoGasExtension is
+    Initializable,
     Ownable,
     ERC165Storage,
-    ERC721,
+    IERC721,
     ERC721OpenSeaNoGasExtensionInterface
 {
     address internal _openSeaProxyRegistryAddress;
     address private _openSeaExchangeAddress;
 
-    constructor(
+    function __ERC721OpenSeaNoGasExtension_init(
         address openSeaProxyRegistryAddress,
         address openSeaExchangeAddress
-    ) {
+    ) internal onlyInitializing {
+        __ERC721OpenSeaNoGasExtension_init_unchained(
+            openSeaProxyRegistryAddress,
+            openSeaExchangeAddress
+        );
+    }
+
+    function __ERC721OpenSeaNoGasExtension_init_unchained(
+        address openSeaProxyRegistryAddress,
+        address openSeaExchangeAddress
+    ) internal onlyInitializing {
         _openSeaProxyRegistryAddress = openSeaProxyRegistryAddress;
         _openSeaExchangeAddress = openSeaExchangeAddress;
 
@@ -59,7 +71,7 @@ abstract contract ERC721OpenSeaNoGasExtension is
         public
         view
         virtual
-        override(ERC165Storage, ERC721)
+        override(ERC165Storage, IERC165)
         returns (bool)
     {
         return ERC165Storage.supportsInterface(interfaceId);
@@ -72,7 +84,7 @@ abstract contract ERC721OpenSeaNoGasExtension is
         public
         view
         virtual
-        override(ERC721, ERC721OpenSeaNoGasExtensionInterface)
+        override(IERC721, ERC721OpenSeaNoGasExtensionInterface)
         returns (bool)
     {
         if (_openSeaProxyRegistryAddress != address(0)) {
@@ -93,6 +105,6 @@ abstract contract ERC721OpenSeaNoGasExtension is
             }
         }
 
-        return super.isApprovedForAll(owner, operator);
+        return false;
     }
 }

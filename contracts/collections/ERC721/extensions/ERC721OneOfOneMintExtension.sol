@@ -38,7 +38,14 @@ abstract contract ERC721OneOfOneMintExtension is
 {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
-    constructor() {
+    function __ERC721OneOfOneMintExtension_init() internal onlyInitializing {
+        __ERC721OneOfOneMintExtension_init_unchained();
+    }
+
+    function __ERC721OneOfOneMintExtension_init_unchained()
+        internal
+        onlyInitializing
+    {
         _registerInterface(
             type(ERC721OneOfOneMintExtensionInterface).interfaceId
         );

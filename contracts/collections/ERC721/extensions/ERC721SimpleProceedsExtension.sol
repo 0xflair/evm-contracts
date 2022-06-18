@@ -3,6 +3,7 @@
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Storage.sol";
 
 interface ERC721SimpleProceedsExtensionInterface {
@@ -17,6 +18,7 @@ interface ERC721SimpleProceedsExtensionInterface {
  * @dev Extension to allow contract owner to withdraw all the funds directly.
  */
 abstract contract ERC721SimpleProceedsExtension is
+    Initializable,
     Ownable,
     ERC165Storage,
     ERC721SimpleProceedsExtensionInterface
@@ -24,12 +26,21 @@ abstract contract ERC721SimpleProceedsExtension is
     address public proceedsRecipient;
     bool public proceedsRecipientLocked;
 
-    constructor() {
+    function __ERC721SimpleProceedsExtension_init(address _proceedsRecipient)
+        internal
+        onlyInitializing
+    {
+        __ERC721SimpleProceedsExtension_init_unchained(_proceedsRecipient);
+    }
+
+    function __ERC721SimpleProceedsExtension_init_unchained(
+        address _proceedsRecipient
+    ) internal onlyInitializing {
         _registerInterface(
             type(ERC721SimpleProceedsExtensionInterface).interfaceId
         );
 
-        proceedsRecipient = msg.sender;
+        proceedsRecipient = _proceedsRecipient;
     }
 
     // ADMIN

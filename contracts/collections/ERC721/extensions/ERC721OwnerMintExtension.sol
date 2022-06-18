@@ -20,7 +20,14 @@ abstract contract ERC721OwnerMintExtension is
     ERC721AutoIdMinterExtension,
     ERC721OwnerMintExtensionInterface
 {
-    constructor() {
+    function __ERC721OwnerMintExtension_init() internal onlyInitializing {
+        __ERC721OwnerMintExtension_init_unchained();
+    }
+
+    function __ERC721OwnerMintExtension_init_unchained()
+        internal
+        onlyInitializing
+    {
         _registerInterface(type(ERC721OwnerMintExtensionInterface).interfaceId);
     }
 

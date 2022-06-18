@@ -19,7 +19,14 @@ abstract contract ERC721FreeMintExtension is
     ERC721AutoIdMinterExtension,
     ERC721FreeMintExtensionInterface
 {
-    constructor() {
+    function __ERC721FreeMintExtension_init() internal onlyInitializing {
+        __ERC721FreeMintExtension_init_unchained();
+    }
+
+    function __ERC721FreeMintExtension_init_unchained()
+        internal
+        onlyInitializing
+    {
         _registerInterface(type(ERC721FreeMintExtensionInterface).interfaceId);
     }
 
