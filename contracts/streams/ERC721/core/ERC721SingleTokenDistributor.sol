@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
-abstract contract ERC721BaseDistributor is Ownable, ReentrancyGuard {
+abstract contract ERC721SingleTokenDistributor is Ownable, ReentrancyGuard {
     using Address for address;
     using Address for address payable;
 
@@ -48,7 +48,7 @@ abstract contract ERC721BaseDistributor is Ownable, ReentrancyGuard {
 
     receive() external payable {
         require(msg.value > 0);
-        require(ticketToken == address(0));
+        require(claimToken == address(0));
     }
 
     function claim(uint256 ticketTokenId) public nonReentrant {

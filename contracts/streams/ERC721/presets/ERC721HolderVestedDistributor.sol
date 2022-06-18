@@ -10,12 +10,12 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
-import "../core/ERC721BaseDistributor.sol";
+import "../core/ERC721SingleTokenDistributor.sol";
 
 contract ERC721HolderVestedDistributor is
     Ownable,
     Initializable,
-    ERC721BaseDistributor
+    ERC721SingleTokenDistributor
 {
     using Address for address;
     using Address for address payable;
@@ -50,7 +50,10 @@ contract ERC721HolderVestedDistributor is
         initializer
     {
         Ownable._transferOwnership(owner);
-        ERC721BaseDistributor._setup(config.claimToken, config.ticketToken);
+        ERC721SingleTokenDistributor._setup(
+            config.claimToken,
+            config.ticketToken
+        );
 
         vestingRate = config.vestingRate;
         vestingTimeUnit = config.vestingTimeUnit;
