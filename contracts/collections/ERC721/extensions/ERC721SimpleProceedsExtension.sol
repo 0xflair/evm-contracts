@@ -29,22 +29,27 @@ abstract contract ERC721SimpleProceedsExtension is
             type(ERC721SimpleProceedsExtensionInterface).interfaceId
         );
 
-        proceedsRecipient = msg.sender;
+        proceedsRecipient = _msgSender();
     }
 
     // ADMIN
 
-    function setProceedsRecipient(address _proceedsRecipient) external {
+    function setProceedsRecipient(address _proceedsRecipient)
+        external
+        onlyOwner
+    {
         require(!proceedsRecipientLocked, "ERC721/RECIPIENT_LOCKED");
         proceedsRecipient = _proceedsRecipient;
     }
 
-    function lockProceedsRecipient() external {
+    function lockProceedsRecipient() external onlyOwner {
         require(!proceedsRecipientLocked, "ERC721/RECIPIENT_LOCKED");
         proceedsRecipientLocked = true;
     }
 
     function withdraw() external {
+        require(proceedsRecipient != address(0), "ERC721/NO_RECIPIENT");
+
         uint256 balance = address(this).balance;
 
         payable(proceedsRecipient).transfer(balance);

@@ -2,19 +2,20 @@
 
 pragma solidity ^0.8.9;
 
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
 import "../core/ERC721MultiTokenDistributor.sol";
 
-contract ERC721HolderSplitDistributor is
-    Ownable,
+contract ERC721ShareholderDistributor is
     Initializable,
+    OwnableUpgradeable,
     ERC721MultiTokenDistributor
 {
     event SharesUpdated(uint256 tokenId, uint256 prevShares, uint256 newShares);
@@ -22,7 +23,7 @@ contract ERC721HolderSplitDistributor is
     using Address for address;
     using Address for address payable;
 
-    string public constant name = "ERC721 Holder-split Distributor";
+    string public constant name = "ERC721 Shareholder Distributor";
 
     string public constant version = "0.1";
 
@@ -39,21 +40,19 @@ contract ERC721HolderSplitDistributor is
     // Map of ticket token ID -> share of the stream
     mapping(uint256 => uint256) public shares;
 
-    // Locks changing the configuration until this timestamp is reached
+    // Locks changing the shareholder table until this timestamp is reached
     uint256 lockedUntilTimestamp;
 
     /* INTERNAL */
 
     constructor(Config memory config) {
-        initialize(msg.sender, config);
+        initialize(config);
     }
 
-    function initialize(address owner, Config memory config)
-        public
-        initializer
-    {
-        Ownable._transferOwnership(owner);
-        ERC721MultiTokenDistributor._setup(config.ticketToken);
+    function initialize(Config memory config) public initializer {
+        __Context_init();
+        __Ownable_init();
+        __ERC721MultiTokenDistributor_init(config.ticketToken);
 
         setShares(config.tokenIds, config.shares);
         lockedUntilTimestamp = config.lockedUntilTimestamp;
@@ -109,12 +108,12 @@ contract ERC721HolderSplitDistributor is
     // INTERNAL
 
     function _updateShares(uint256 tokenId, uint256 newShares) private {
-        require(newShares > 0, "DISTRIBUTOR/ZERO_SHARES");
-
         uint256 prevShares = shares[tokenId];
 
         shares[tokenId] = newShares;
         totalShares = totalShares + newShares - prevShares;
+
+        require(totalShares >= 0, "DISTRIBUTOR/NEGATIVE_SHARES");
 
         emit SharesUpdated(tokenId, prevShares, newShares);
     }

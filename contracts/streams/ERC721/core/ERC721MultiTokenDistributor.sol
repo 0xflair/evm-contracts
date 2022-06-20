@@ -2,15 +2,54 @@
 
 pragma solidity ^0.8.9;
 
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
-abstract contract ERC721MultiTokenDistributor is Ownable, ReentrancyGuard {
+interface ERC721MultiTokenDistributorInterface {
+    function claim(uint256 ticketTokenId) external;
+
+    function claim(uint256 ticketTokenId, address claimToken) external;
+
+    function claimBulk(uint256[] calldata ticketTokenIds) external;
+
+    function claimBulk(uint256[] calldata ticketTokenIds, address claimToken)
+        external;
+
+    function streamTotalSupply() external view returns (uint256);
+
+    function streamTotalSupply(address claimToken)
+        external
+        view
+        returns (uint256);
+
+    function getTotalClaimedBulk(uint256[] calldata ticketTokenIds)
+        external
+        view
+        returns (uint256);
+
+    function getTotalClaimedBulk(
+        uint256[] calldata ticketTokenIds,
+        address claimToken
+    ) external view returns (uint256);
+
+    function calculateClaimableAmount(uint256 ticketTokenId, address claimToken)
+        external
+        view
+        returns (uint256 claimableAmount);
+}
+
+abstract contract ERC721MultiTokenDistributor is
+    Initializable,
+    OwnableUpgradeable,
+    ReentrancyGuard,
+    ERC721MultiTokenDistributorInterface
+{
     using Address for address;
     using Address for address payable;
 
@@ -44,7 +83,18 @@ abstract contract ERC721MultiTokenDistributor is Ownable, ReentrancyGuard {
         uint256 releasedAmount
     );
 
-    function _setup(address _ticketToken) internal {
+    function __ERC721MultiTokenDistributor_init(address _ticketToken)
+        internal
+        onlyInitializing
+    {
+        __Context_init();
+        __ERC721MultiTokenDistributor_init_unchained(_ticketToken);
+    }
+
+    function __ERC721MultiTokenDistributor_init_unchained(address _ticketToken)
+        internal
+        onlyInitializing
+    {
         ticketToken = _ticketToken;
     }
 

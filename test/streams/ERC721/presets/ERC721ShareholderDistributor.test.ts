@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { utils, BigNumberish } from "ethers";
 import hre, { deployments, getUnnamedAccounts } from "hardhat";
 
-import { ERC721HolderSplitDistributor } from "../../../../typechain";
+import { ERC721ShareholderDistributor } from "../../../../typechain";
 import { deployPermanentContract } from "../../../../hardhat.util";
 
 import { setupTest } from "../../../setup";
@@ -13,7 +13,7 @@ const deployDistributor = async function (args?: {
   tokenIds?: BigNumberish[];
   shares?: BigNumberish[];
   lockedUntilTimestamp?: BigNumberish;
-}): Promise<ERC721HolderSplitDistributor> {
+}): Promise<ERC721ShareholderDistributor> {
   const accounts = await getUnnamedAccounts();
   const nowUnix = Math.floor(new Date().getTime() / 1000);
   const ticketToken = await hre.ethers.getContract("TestERC721", accounts[0]);
@@ -22,7 +22,7 @@ const deployDistributor = async function (args?: {
     deployments,
     accounts[0],
     accounts[0],
-    "ERC721HolderSplitDistributor",
+    "ERC721ShareholderDistributor",
     [
       {
         ticketToken: ticketToken.address,
@@ -32,10 +32,10 @@ const deployDistributor = async function (args?: {
         ...(args || {}),
       },
     ]
-  )) as ERC721HolderSplitDistributor;
+  )) as ERC721ShareholderDistributor;
 };
 
-describe("ERC721HolderSplitDistributor", function () {
+describe("ERC721ShareholderDistributor", function () {
   describe("Native Token Streams", function () {
     it("should top-up a native-token stream", async function () {
       const { userA } = await setupTest();
@@ -145,6 +145,48 @@ describe("ERC721HolderSplitDistributor", function () {
       ).to.changeEtherBalances(
         [distributor, userC.signer],
         [utils.parseEther("-0.6"), utils.parseEther("0.6")]
+      );
+    });
+
+    it("should claim unclaimed amounts when amount of shares is updated", async function () {
+      const { deployer, userA, userB, userC } = await setupTest();
+
+      const distributor = await deployDistributor();
+
+      await userA.signer.sendTransaction({
+        to: distributor.address,
+        value: utils.parseEther("4.4"),
+      });
+
+      await userA.TestERC721.mintExact(userB.signer.address, 2);
+
+      await increaseTime(2 * 24 * 60 * 60); // 2 days
+
+      await expect(
+        await distributor
+          .connect(userB.signer)
+          ["claim(uint256,address)"](2, ZERO_ADDRESS)
+      ).to.changeEtherBalances(
+        [distributor, userB.signer],
+        [utils.parseEther("-1.1"), utils.parseEther("1.1")]
+      );
+
+      await userA.signer.sendTransaction({
+        to: distributor.address,
+        value: utils.parseEther("2.4"),
+      });
+
+      await increaseTime(3 * 24 * 60 * 60); // 3 days
+
+      await distributor.connect(deployer.signer).setShares([2, 4], [5000, 0]);
+
+      await expect(
+        await distributor
+          .connect(userB.signer)
+          ["claim(uint256,address)"](2, ZERO_ADDRESS)
+      ).to.changeEtherBalances(
+        [distributor, userB.signer],
+        [utils.parseEther("-2.3"), utils.parseEther("2.3")]
       );
     });
 
@@ -318,6 +360,48 @@ describe("ERC721HolderSplitDistributor", function () {
 
       expect(await userC.TestERC20.balanceOf(userC.signer.address)).to.equal(
         utils.parseEther("6")
+      );
+    });
+
+    it("should claim unclaimed amounts when amount of shares is updated", async function () {
+      const { deployer, userA, userB, userC } = await setupTest();
+
+      const distributor = await deployDistributor();
+
+      await userA.TestERC20.mint(userA.signer.address, utils.parseEther("44"));
+      await userA.TestERC20.transfer(
+        distributor.address,
+        utils.parseEther("44")
+      );
+
+      await userA.TestERC721.mintExact(userB.signer.address, 2);
+
+      await increaseTime(2 * 24 * 60 * 60); // 2 days
+
+      await distributor
+        .connect(userB.signer)
+        ["claim(uint256,address)"](2, userA.TestERC20.address);
+
+      expect(await userB.TestERC20.balanceOf(userB.signer.address)).to.equal(
+        utils.parseEther("11")
+      );
+
+      await userA.TestERC20.mint(userA.signer.address, utils.parseEther("24"));
+      await userA.TestERC20.transfer(
+        distributor.address,
+        utils.parseEther("24")
+      );
+
+      await increaseTime(3 * 24 * 60 * 60); // 3 days
+
+      await distributor.connect(deployer.signer).setShares([2, 4], [5000, 0]);
+
+      await distributor
+        .connect(userB.signer)
+        ["claim(uint256,address)"](2, userA.TestERC20.address);
+
+      expect(await userB.TestERC20.balanceOf(userB.signer.address)).to.equal(
+        utils.parseEther("34")
       );
     });
 
