@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import { expect } from "chai";
-import { ethers, getUnnamedAccounts, getChainId } from "hardhat";
+import { ethers, getUnnamedAccounts } from "hardhat";
 import { ERC721ManagedPrefixedCollection__factory } from "../../../typechain/factories/ERC721ManagedPrefixedCollection__factory";
 
 describe("ERC721ManagedPrefixedCollection", function () {
@@ -43,6 +43,8 @@ describe("ERC721ManagedPrefixedCollection", function () {
       placeholderURI: "ipfs://yyyyy",
       contractURI: "ipfs://zzzzzz",
       maxSupply: 10,
+      defaultRoyaltyAddress: "0x0000000000000000000000000000000000000000",
+      defaultRoyaltyBps: 1000,
       trustedForwarder: "0x0000000000000000000000000000000000000000",
       initialHolders: [],
       initialAmounts: [],
@@ -65,6 +67,8 @@ describe("ERC721ManagedPrefixedCollection", function () {
       placeholderURI: "ipfs://yyyyy",
       contractURI: "ipfs://zzzzzz",
       maxSupply: 10,
+      defaultRoyaltyAddress: "0x0000000000000000000000000000000000000000",
+      defaultRoyaltyBps: 1000,
       trustedForwarder: "0x0000000000000000000000000000000000000000",
       initialHolders: [],
       initialAmounts: [],
@@ -89,6 +93,8 @@ describe("ERC721ManagedPrefixedCollection", function () {
       placeholderURI: "ipfs://yyyyy",
       contractURI: "ipfs://zzzzzz",
       maxSupply: 10,
+      defaultRoyaltyAddress: "0x0000000000000000000000000000000000000000",
+      defaultRoyaltyBps: 1000,
       trustedForwarder: "0x0000000000000000000000000000000000000000",
       initialHolders: [userA],
       initialAmounts: [1],
@@ -114,6 +120,8 @@ describe("ERC721ManagedPrefixedCollection", function () {
       placeholderURI: "ipfs://yyyyy",
       contractURI: "ipfs://zzzzzz",
       maxSupply: 10,
+      defaultRoyaltyAddress: "0x0000000000000000000000000000000000000000",
+      defaultRoyaltyBps: 1000,
       trustedForwarder: "0x0000000000000000000000000000000000000000",
       initialHolders: [userA],
       initialAmounts: [1],
