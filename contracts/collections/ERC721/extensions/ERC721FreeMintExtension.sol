@@ -23,7 +23,7 @@ abstract contract ERC721FreeMintExtension is
         _registerInterface(type(ERC721FreeMintExtensionInterface).interfaceId);
     }
 
-    // PUBLIC
+    /* PUBLIC */
 
     function supportsInterface(bytes4 interfaceId)
         public

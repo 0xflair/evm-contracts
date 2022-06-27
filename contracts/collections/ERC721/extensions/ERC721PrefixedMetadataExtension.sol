@@ -46,7 +46,7 @@ abstract contract ERC721PrefixedMetadataExtension is
         );
     }
 
-    // ADMIN
+    /* ADMIN */
 
     function setPlaceholderURI(string memory newValue) external onlyOwner {
         _placeholderURI = newValue;
@@ -61,7 +61,7 @@ abstract contract ERC721PrefixedMetadataExtension is
         baseURIFrozen = true;
     }
 
-    // PUBLIC
+    /* PUBLIC */
 
     function supportsInterface(bytes4 interfaceId)
         public

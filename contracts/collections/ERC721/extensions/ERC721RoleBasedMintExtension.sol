@@ -28,7 +28,7 @@ abstract contract ERC721RoleBasedMintExtension is
         );
     }
 
-    // ADMIN
+    /* ADMIN */
 
     function mintByRole(address to, uint256 count) external {
         require(hasRole(MINTER_ROLE, _msgSender()), "NOT_MINTER_ROLE");
@@ -36,7 +36,7 @@ abstract contract ERC721RoleBasedMintExtension is
         _mintTo(to, count);
     }
 
-    // PUBLIC
+    /* PUBLIC */
 
     function supportsInterface(bytes4 interfaceId)
         public

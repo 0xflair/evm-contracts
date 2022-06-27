@@ -24,13 +24,13 @@ abstract contract ERC721OwnerMintExtension is
         _registerInterface(type(ERC721OwnerMintExtensionInterface).interfaceId);
     }
 
-    // ADMIN
+    /* ADMIN */
 
     function mintByOwner(address to, uint256 count) external onlyOwner {
         _mintTo(to, count);
     }
 
-    // PUBLIC
+    /* PUBLIC */
 
     function supportsInterface(bytes4 interfaceId)
         public

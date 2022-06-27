@@ -44,7 +44,7 @@ abstract contract ERC721OneOfOneMintExtension is
         );
     }
 
-    // ADMIN
+    /* ADMIN */
 
     function mintWithTokenURIsByOwner(
         address to,
@@ -72,7 +72,7 @@ abstract contract ERC721OneOfOneMintExtension is
         }
     }
 
-    // PUBLIC
+    /* PUBLIC */
 
     function supportsInterface(bytes4 interfaceId)
         public

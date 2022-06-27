@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { utils, BigNumberish } from "ethers";
 import hre, { deployments, getUnnamedAccounts } from "hardhat";
 
-import { ERC721ShareBasedDistributor } from "../../../../typechain";
+import { ERC721ShareSplitDistributor } from "../../../../typechain";
 import { deployPermanentContract } from "../../../../hardhat.util";
 
 import { setupTest } from "../../../setup";
@@ -13,29 +13,32 @@ const deployDistributor = async function (args?: {
   tokenIds?: BigNumberish[];
   shares?: BigNumberish[];
   lockedUntilTimestamp?: BigNumberish;
-}): Promise<ERC721ShareBasedDistributor> {
+}): Promise<ERC721ShareSplitDistributor> {
   const accounts = await getUnnamedAccounts();
-  const nowUnix = Math.floor(new Date().getTime() / 1000);
+  const nowMinusOneDayUnix =
+    Math.floor(new Date().getTime() / 1000) - 24 * 60 * 60;
   const ticketToken = await hre.ethers.getContract("TestERC721", accounts[0]);
 
   return (await deployPermanentContract(
     deployments,
     accounts[0],
     accounts[0],
-    "ERC721ShareBasedDistributor",
+    "ERC721ShareSplitDistributor",
     [
       {
+        // Base
         ticketToken: ticketToken.address,
+        lockedUntilTimestamp: nowMinusOneDayUnix,
+        // Share split extension
         tokenIds: [1, 2, 3, 4],
-        shares: [2500, 2500, 2500, 2500],
-        lockedUntilTimestamp: nowUnix,
+        shares: [2500, 1000, 2500, 4000],
         ...(args || {}),
       },
     ]
-  )) as ERC721ShareBasedDistributor;
+  )) as ERC721ShareSplitDistributor;
 };
 
-describe("ERC721ShareBasedDistributor", function () {
+describe("ERC721ShareSplitDistributor", function () {
   describe("Native Token Streams", function () {
     it("should top-up a native-token stream", async function () {
       const { userA } = await setupTest();
@@ -80,7 +83,7 @@ describe("ERC721ShareBasedDistributor", function () {
       ).to.equal(utils.parseEther("4.5"));
     });
 
-    it("should claim 25% share with 1 single nft", async function () {
+    it("should claim 10% share with 1 single nft", async function () {
       const { userA, userB } = await setupTest();
 
       const distributor = await deployDistributor();
@@ -98,7 +101,7 @@ describe("ERC721ShareBasedDistributor", function () {
         await distributor.connect(userB.signer)["claim(uint256)"](2)
       ).to.changeEtherBalances(
         [distributor, userB.signer],
-        [utils.parseEther("-1.1"), utils.parseEther("1.1")]
+        [utils.parseEther("-0.44"), utils.parseEther("0.44")]
       );
     });
 
@@ -122,7 +125,7 @@ describe("ERC721ShareBasedDistributor", function () {
           ["claim(uint256,address)"](2, ZERO_ADDRESS)
       ).to.changeEtherBalances(
         [distributor, userB.signer],
-        [utils.parseEther("-1.1"), utils.parseEther("1.1")]
+        [utils.parseEther("-0.44"), utils.parseEther("0.44")]
       );
 
       await userB.TestERC721.transferFrom(
@@ -144,12 +147,12 @@ describe("ERC721ShareBasedDistributor", function () {
           ["claim(uint256,address)"](2, ZERO_ADDRESS)
       ).to.changeEtherBalances(
         [distributor, userC.signer],
-        [utils.parseEther("-0.6"), utils.parseEther("0.6")]
+        [utils.parseEther("-0.24"), utils.parseEther("0.24")]
       );
     });
 
     it("should claim unclaimed amounts when amount of shares is updated", async function () {
-      const { deployer, userA, userB, userC } = await setupTest();
+      const { deployer, userA, userB } = await setupTest();
 
       const distributor = await deployDistributor();
 
@@ -168,7 +171,7 @@ describe("ERC721ShareBasedDistributor", function () {
           ["claim(uint256,address)"](2, ZERO_ADDRESS)
       ).to.changeEtherBalances(
         [distributor, userB.signer],
-        [utils.parseEther("-1.1"), utils.parseEther("1.1")]
+        [utils.parseEther("-0.44"), utils.parseEther("0.44")]
       );
 
       await userA.signer.sendTransaction({
@@ -178,7 +181,9 @@ describe("ERC721ShareBasedDistributor", function () {
 
       await increaseTime(3 * 24 * 60 * 60); // 3 days
 
-      await distributor.connect(deployer.signer).setShares([2, 4], [5000, 0]);
+      await distributor
+        .connect(deployer.signer)
+        .setSharesForTokens([2, 4], [5000, 0]);
 
       await expect(
         await distributor
@@ -186,7 +191,7 @@ describe("ERC721ShareBasedDistributor", function () {
           ["claim(uint256,address)"](2, ZERO_ADDRESS)
       ).to.changeEtherBalances(
         [distributor, userB.signer],
-        [utils.parseEther("-2.3"), utils.parseEther("2.3")]
+        [utils.parseEther("-2.96"), utils.parseEther("2.96")]
       );
     });
 
@@ -228,7 +233,7 @@ describe("ERC721ShareBasedDistributor", function () {
           ["claim(uint256,address)"](2, ZERO_ADDRESS)
       ).to.changeEtherBalances(
         [distributor, userB.signer],
-        [utils.parseEther("-1.1"), utils.parseEther("1.1")]
+        [utils.parseEther("-0.44"), utils.parseEther("0.44")]
       );
 
       await expect(
@@ -238,7 +243,7 @@ describe("ERC721ShareBasedDistributor", function () {
       ).to.be.revertedWith("DISTRIBUTOR/NOTHING_TO_CLAIM");
     });
 
-    it("should fail to claim when not nft owner", async function () {
+    it("should claim on behalf of current nft owner", async function () {
       const { userA, userB, userC } = await setupTest();
 
       const distributor = await deployDistributor();
@@ -253,8 +258,13 @@ describe("ERC721ShareBasedDistributor", function () {
       await increaseTime(2 * 24 * 60 * 60); // 2 days
 
       await expect(
-        distributor.connect(userC.signer)["claim(uint256)"](2)
-      ).to.be.revertedWith("DISTRIBUTOR/NOT_NFT_OWNER");
+        await distributor
+          .connect(userC.signer)
+          ["claim(uint256,address)"](2, ZERO_ADDRESS)
+      ).to.changeEtherBalances(
+        [distributor, userB.signer],
+        [utils.parseEther("-0.44"), utils.parseEther("0.44")]
+      );
     });
   });
 
@@ -295,7 +305,7 @@ describe("ERC721ShareBasedDistributor", function () {
       ).to.equal(utils.parseEther("15"));
     });
 
-    it("should claim 25% share with 1 single nft", async function () {
+    it("should claim 10% share with 1 single nft", async function () {
       const { userA, userB } = await setupTest();
 
       const distributor = await deployDistributor();
@@ -314,7 +324,7 @@ describe("ERC721ShareBasedDistributor", function () {
         ["claim(uint256,address)"](2, userA.TestERC20.address);
 
       expect(await userB.TestERC20.balanceOf(userB.signer.address)).to.equal(
-        utils.parseEther("11")
+        utils.parseEther("4.4")
       );
     });
 
@@ -337,7 +347,7 @@ describe("ERC721ShareBasedDistributor", function () {
         ["claim(uint256,address)"](2, userA.TestERC20.address);
 
       expect(await userB.TestERC20.balanceOf(userB.signer.address)).to.equal(
-        utils.parseEther("11")
+        utils.parseEther("4.4")
       );
 
       await userB.TestERC721.transferFrom(
@@ -359,12 +369,12 @@ describe("ERC721ShareBasedDistributor", function () {
         ["claim(uint256,address)"](2, userA.TestERC20.address);
 
       expect(await userC.TestERC20.balanceOf(userC.signer.address)).to.equal(
-        utils.parseEther("6")
+        utils.parseEther("2.4")
       );
     });
 
     it("should claim unclaimed amounts when amount of shares is updated", async function () {
-      const { deployer, userA, userB, userC } = await setupTest();
+      const { deployer, userA, userB } = await setupTest();
 
       const distributor = await deployDistributor();
 
@@ -383,7 +393,7 @@ describe("ERC721ShareBasedDistributor", function () {
         ["claim(uint256,address)"](2, userA.TestERC20.address);
 
       expect(await userB.TestERC20.balanceOf(userB.signer.address)).to.equal(
-        utils.parseEther("11")
+        utils.parseEther("4.4")
       );
 
       await userA.TestERC20.mint(userA.signer.address, utils.parseEther("24"));
@@ -394,7 +404,9 @@ describe("ERC721ShareBasedDistributor", function () {
 
       await increaseTime(3 * 24 * 60 * 60); // 3 days
 
-      await distributor.connect(deployer.signer).setShares([2, 4], [5000, 0]);
+      await distributor
+        .connect(deployer.signer)
+        .setSharesForTokens([2, 4], [5000, 0]);
 
       await distributor
         .connect(userB.signer)
@@ -438,7 +450,7 @@ describe("ERC721ShareBasedDistributor", function () {
         ["claim(uint256,address)"](2, userA.TestERC20.address);
 
       expect(await userB.TestERC20.balanceOf(userB.signer.address)).to.equal(
-        utils.parseEther("11")
+        utils.parseEther("4.4")
       );
 
       await expect(
@@ -448,7 +460,7 @@ describe("ERC721ShareBasedDistributor", function () {
       ).to.be.revertedWith("DISTRIBUTOR/NOTHING_TO_CLAIM");
     });
 
-    it("should fail to claim when not nft owner", async function () {
+    it("should claim on behalf of current nft owner", async function () {
       const { userA, userB, userC } = await setupTest();
 
       const distributor = await deployDistributor();
@@ -462,11 +474,16 @@ describe("ERC721ShareBasedDistributor", function () {
 
       await increaseTime(2 * 24 * 60 * 60); // 2 days
 
-      await expect(
-        distributor
-          .connect(userC.signer)
-          ["claim(uint256,address)"](2, userA.TestERC20.address)
-      ).to.be.revertedWith("DISTRIBUTOR/NOT_NFT_OWNER");
+      await distributor
+        .connect(userC.signer)
+        ["claim(uint256,address)"](2, userA.TestERC20.address);
+
+      expect(await userC.TestERC20.balanceOf(userC.signer.address)).to.equal(
+        utils.parseEther("0")
+      );
+      expect(await userB.TestERC20.balanceOf(userB.signer.address)).to.equal(
+        utils.parseEther("4.4")
+      );
     });
   });
 });

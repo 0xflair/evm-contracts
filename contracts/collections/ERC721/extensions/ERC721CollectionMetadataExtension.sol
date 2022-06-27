@@ -31,13 +31,13 @@ abstract contract ERC721CollectionMetadataExtension is
         _registerInterface(type(IERC721Metadata).interfaceId);
     }
 
-    // ADMIN
+    /* ADMIN */
 
     function setContractURI(string memory newValue) external onlyOwner {
         _contractURI = newValue;
     }
 
-    // PUBLIC
+    /* PUBLIC */
 
     function supportsInterface(bytes4 interfaceId)
         public

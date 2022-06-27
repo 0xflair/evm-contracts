@@ -32,7 +32,7 @@ abstract contract ERC721BulkifyExtension is
         _registerInterface(type(ERC721BulkifyExtensionInterface).interfaceId);
     }
 
-    // PUBLIC
+    /* PUBLIC */
 
     function supportsInterface(bytes4 interfaceId)
         public

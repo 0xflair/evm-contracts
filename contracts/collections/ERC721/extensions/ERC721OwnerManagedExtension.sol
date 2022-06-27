@@ -28,13 +28,13 @@ abstract contract ERC721OwnerManagedExtension is
         );
     }
 
-    // ADMIN
+    /* ADMIN */
 
     function revokeManagementPower() external onlyOwner {
         managementPowerRevoked = true;
     }
 
-    // PUBLIC
+    /* PUBLIC */
 
     /**
      * Override isApprovedForAll to allow owner to transfer tokens.

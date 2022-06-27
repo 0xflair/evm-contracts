@@ -12,29 +12,13 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     hre.deployments,
     accounts[0],
     accounts[0],
-    "ERC721HolderVestedDistributor",
-    [
-      {
-        claimToken: "0x0000000000000000000000000000000000000000",
-        ticketToken: "0x0000000000000000000000000000000000000000",
-        vestingRate: utils.parseEther("1"),
-        vestingTimeUnit: 60 * 60, // 1 hour
-        claimStart: 0,
-        claimEnd: 999999999999999,
-      },
-    ]
-  );
-  await deployPermanentContract(
-    hre.deployments,
-    accounts[0],
-    accounts[0],
-    "ERC721ShareBasedDistributor",
+    "ERC721ShareSplitDistributor",
     [
       {
         ticketToken: "0x0000000000000000000000000000000000000000",
+        lockedUntilTimestamp: 0,
         tokenIds: [],
         shares: [],
-        lockedUntilTimestamp: 0,
       },
     ]
   );

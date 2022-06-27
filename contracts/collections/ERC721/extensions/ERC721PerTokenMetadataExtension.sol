@@ -32,7 +32,7 @@ abstract contract ERC721PerTokenMetadataExtension is
         );
     }
 
-    // ADMIN
+    /* ADMIN */
 
     function freezeTokenURIs(uint256 _lastFrozenTokenId) external onlyOwner {
         require(_lastFrozenTokenId > lastFrozenTokenId, "CANNOT_UNFREEZE");
@@ -47,7 +47,7 @@ abstract contract ERC721PerTokenMetadataExtension is
         _setTokenURI(tokenId, tokenURI);
     }
 
-    // PUBLIC
+    /* PUBLIC */
 
     function supportsInterface(bytes4 interfaceId)
         public

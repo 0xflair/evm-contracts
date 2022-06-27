@@ -32,7 +32,7 @@ abstract contract ERC721SimpleProceedsExtension is
         proceedsRecipient = _msgSender();
     }
 
-    // ADMIN
+    /* ADMIN */
 
     function setProceedsRecipient(address _proceedsRecipient)
         external
@@ -55,7 +55,7 @@ abstract contract ERC721SimpleProceedsExtension is
         payable(proceedsRecipient).transfer(balance);
     }
 
-    // PUBLIC
+    /* PUBLIC */
 
     function supportsInterface(bytes4 interfaceId)
         public

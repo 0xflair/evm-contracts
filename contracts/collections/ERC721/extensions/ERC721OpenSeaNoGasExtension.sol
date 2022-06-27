@@ -43,7 +43,7 @@ abstract contract ERC721OpenSeaNoGasExtension is
         );
     }
 
-    // ADMIN
+    /* ADMIN */
 
     function setOpenSeaProxyRegistryAddress(address addr) external onlyOwner {
         _openSeaProxyRegistryAddress = addr;
@@ -53,7 +53,7 @@ abstract contract ERC721OpenSeaNoGasExtension is
         _openSeaExchangeAddress = addr;
     }
 
-    // PUBLIC
+    /* PUBLIC */
 
     function supportsInterface(bytes4 interfaceId)
         public

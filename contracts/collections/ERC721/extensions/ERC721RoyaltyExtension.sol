@@ -84,7 +84,7 @@ abstract contract ERC721RoyaltyExtension is
         // avoid unused param warning
     }
 
-    // PUBLIC
+    /* PUBLIC */
 
     function supportsInterface(bytes4 interfaceId)
         public

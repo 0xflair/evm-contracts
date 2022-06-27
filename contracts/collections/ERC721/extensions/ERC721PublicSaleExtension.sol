@@ -41,7 +41,7 @@ abstract contract ERC721PublicSaleExtension is
         );
     }
 
-    // ADMIN
+    /* ADMIN */
 
     function setPublicSalePrice(uint256 newValue) external onlyOwner {
         publicSalePrice = newValue;
@@ -55,7 +55,7 @@ abstract contract ERC721PublicSaleExtension is
         publicSaleStatus = isActive;
     }
 
-    // PUBLIC
+    /* PUBLIC */
 
     function supportsInterface(bytes4 interfaceId)
         public

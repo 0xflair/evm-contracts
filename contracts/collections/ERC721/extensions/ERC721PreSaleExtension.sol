@@ -50,7 +50,7 @@ abstract contract ERC721PreSaleExtension is
         _registerInterface(type(ERC721PreSaleExtensionInterface).interfaceId);
     }
 
-    // ADMIN
+    /* ADMIN */
 
     function setPreSalePrice(uint256 newValue) external onlyOwner {
         preSalePrice = newValue;
@@ -68,7 +68,7 @@ abstract contract ERC721PreSaleExtension is
         preSaleStatus = isActive;
     }
 
-    // PUBLIC
+    /* PUBLIC */
 
     function supportsInterface(bytes4 interfaceId)
         public
@@ -121,7 +121,7 @@ abstract contract ERC721PreSaleExtension is
         _mintTo(to, count);
     }
 
-    // INTERNAL
+    /* INTERNAL */
 
     function _generateMerkleLeaf(address account)
         internal

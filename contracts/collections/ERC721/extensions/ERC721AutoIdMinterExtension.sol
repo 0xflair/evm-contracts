@@ -40,7 +40,7 @@ abstract contract ERC721AutoIdMinterExtension is
         _registerInterface(type(IERC721).interfaceId);
     }
 
-    // ADMIN
+    /* ADMIN */
 
     function setMaxSupply(uint256 newValue) external onlyOwner {
         require(!maxSupplyFrozen, "BASE_URI_FROZEN");
@@ -51,7 +51,7 @@ abstract contract ERC721AutoIdMinterExtension is
         maxSupplyFrozen = true;
     }
 
-    // PUBLIC
+    /* PUBLIC */
 
     function supportsInterface(bytes4 interfaceId)
         public
@@ -67,7 +67,7 @@ abstract contract ERC721AutoIdMinterExtension is
         return _currentTokenId;
     }
 
-    // INTERNAL
+    /* INTERNAL */
 
     function _mintTo(address to, uint256 count) internal {
         require(totalSupply() + count <= maxSupply, "EXCEEDS_MAX_SUPPLY");
