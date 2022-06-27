@@ -74,11 +74,11 @@ interface IERC721MultiTokenDistributor {
 }
 
 abstract contract ERC721MultiTokenDistributor is
+    IERC721MultiTokenDistributor,
     Initializable,
     ERC165Storage,
     OwnableUpgradeable,
-    ReentrancyGuard,
-    IERC721MultiTokenDistributor
+    ReentrancyGuard
 {
     using Address for address;
     using Address for address payable;

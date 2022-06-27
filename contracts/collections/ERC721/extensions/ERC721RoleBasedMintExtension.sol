@@ -15,10 +15,10 @@ interface IERC721RoleBasedMintExtension {
  * @dev Extension to allow holders of a OpenZepplin-based role to mint directly.
  */
 abstract contract ERC721RoleBasedMintExtension is
+    IERC721RoleBasedMintExtension,
     ERC165Storage,
     ERC721AutoIdMinterExtension,
-    AccessControl,
-    IERC721RoleBasedMintExtension
+    AccessControl
 {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 

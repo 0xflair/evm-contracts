@@ -39,6 +39,22 @@ const deployDistributor = async function (args?: {
 };
 
 describe("ERC721ShareInstantDistributor", function () {
+  describe("Interfaces", function () {
+    it("supports IERC721ShareSplitExtension", async function () {
+      await setupTest();
+      const distributor = await deployDistributor();
+
+      expect(await distributor.supportsInterface("0x678f467e")).to.equal(true);
+    });
+
+    it("supports IERC721InstantReleaseExtension", async function () {
+      await setupTest();
+      const distributor = await deployDistributor();
+
+      expect(await distributor.supportsInterface("0x12599909")).to.equal(true);
+    });
+  });
+
   describe("Native Token Streams", function () {
     it("should top-up a native-token stream", async function () {
       const { userA } = await setupTest();
