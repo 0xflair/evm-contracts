@@ -13,12 +13,17 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "../base/ERC721MultiTokenDistributor.sol";
 
+interface IStreamInstantReleaseExtension {
+    function hasStreamInstantReleaseExtension() external view returns (bool);
+}
+
 abstract contract StreamInstantReleaseExtension is
+    IStreamInstantReleaseExtension,
     Initializable,
     OwnableUpgradeable,
     ERC721MultiTokenDistributor
 {
-    /* INTERNAL */
+    /* INIT */
 
     function __StreamInstantReleaseExtension_init() internal onlyInitializing {
         __Context_init();
@@ -29,6 +34,12 @@ abstract contract StreamInstantReleaseExtension is
         internal
         onlyInitializing
     {}
+
+    /* PUBLIC */
+
+    function hasStreamInstantReleaseExtension() external pure returns (bool) {
+        return true;
+    }
 
     /* INTERNAL */
 

@@ -20,7 +20,7 @@ contract ERC721ShareVestingDistributor is
     StreamVestingReleaseExtension,
     StreamShareSplitExtension
 {
-    string public constant name = "ERC721 Share-vesting Distributor";
+    string public constant name = "ERC721 Share Vesting Distributor";
 
     string public constant version = "0.1";
 

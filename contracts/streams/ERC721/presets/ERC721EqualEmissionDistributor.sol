@@ -23,7 +23,7 @@ contract ERC721EqualEmissionDistributor is
     using Address for address;
     using Address for address payable;
 
-    string public constant name = "ERC721 Equal-emission Distributor";
+    string public constant name = "ERC721 Equal Emission Distributor";
 
     string public constant version = "0.1";
 

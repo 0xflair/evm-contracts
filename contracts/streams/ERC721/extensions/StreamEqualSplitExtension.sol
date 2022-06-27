@@ -13,7 +13,12 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "../base/ERC721MultiTokenDistributor.sol";
 
+interface IStreamEqualSplitExtension {
+    function hasStreamEqualSplitExtension() external view returns (bool);
+}
+
 abstract contract StreamEqualSplitExtension is
+    IStreamEqualSplitExtension,
     Initializable,
     OwnableUpgradeable,
     ERC721MultiTokenDistributor
@@ -49,6 +54,12 @@ abstract contract StreamEqualSplitExtension is
     }
 
     /* PUBLIC */
+
+    function hasStreamEqualSplitExtension() external pure returns (bool) {
+        return true;
+    }
+
+    /* INTERNAL */
 
     function _totalTokenShare(
         uint256 totalReleasedAmount_,

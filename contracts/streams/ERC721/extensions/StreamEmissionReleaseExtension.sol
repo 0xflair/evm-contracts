@@ -13,7 +13,12 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "../base/ERC721MultiTokenDistributor.sol";
 
+interface IStreamEmissionReleaseExtension {
+    function hasStreamEmissionReleaseExtension() external view returns (bool);
+}
+
 abstract contract StreamEmissionReleaseExtension is
+    IStreamEmissionReleaseExtension,
     Initializable,
     OwnableUpgradeable,
     ERC721MultiTokenDistributor
@@ -94,6 +99,10 @@ abstract contract StreamEmissionReleaseExtension is
     }
 
     /* PUBLIC */
+
+    function hasStreamEmissionReleaseExtension() external pure returns (bool) {
+        return true;
+    }
 
     function releasedAmountUntil(uint256 calcUntil)
         public

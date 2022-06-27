@@ -13,57 +13,68 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "../base/ERC721MultiTokenDistributor.sol";
 
+interface IStreamVestingReleaseExtension {
+    function hasStreamVestingReleaseExtension() external view returns (bool);
+}
+
 abstract contract StreamVestingReleaseExtension is
+    IStreamVestingReleaseExtension,
     Initializable,
     OwnableUpgradeable,
     ERC721MultiTokenDistributor
 {
     // Start of the vesting schedule
-    uint64 public startTimestamp;
+    uint64 public vestingStartTimestamp;
 
     // Duration of the vesting schedule
-    uint64 public durationSeconds;
+    uint64 public vestingDurationSeconds;
 
     /* INTERNAL */
 
     function __StreamVestingReleaseExtension_init(
-        uint64 _startTimestamp,
-        uint64 _durationSeconds
+        uint64 _vestingStartTimestamp,
+        uint64 _vestingDurationSeconds
     ) internal onlyInitializing {
         __Context_init();
         __StreamVestingReleaseExtension_init_unchained(
-            _startTimestamp,
-            _durationSeconds
+            _vestingStartTimestamp,
+            _vestingDurationSeconds
         );
     }
 
     function __StreamVestingReleaseExtension_init_unchained(
-        uint64 _startTimestamp,
-        uint64 _durationSeconds
+        uint64 _vestingStartTimestamp,
+        uint64 _vestingDurationSeconds
     ) internal onlyInitializing {
-        startTimestamp = _startTimestamp;
-        durationSeconds = _durationSeconds;
+        vestingStartTimestamp = _vestingStartTimestamp;
+        vestingDurationSeconds = _vestingDurationSeconds;
     }
 
     /* ADMIN */
 
-    function setStartTimestamp(uint64 newValue) public onlyOwner {
+    function setVestingStartTimestamp(uint64 newValue) public onlyOwner {
         require(
             lockedUntilTimestamp < block.timestamp,
             "DISTRIBUTOR/CONFIG_LOCKED"
         );
-        startTimestamp = newValue;
+        vestingStartTimestamp = newValue;
     }
 
-    function setDurationSeconds(uint64 newValue) public onlyOwner {
+    function setVestingDurationSeconds(uint64 newValue) public onlyOwner {
         require(
             lockedUntilTimestamp < block.timestamp,
             "DISTRIBUTOR/CONFIG_LOCKED"
         );
-        durationSeconds = newValue;
+        vestingDurationSeconds = newValue;
     }
 
     /* PUBLIC */
+
+    function hasStreamVestingReleaseExtension() external pure returns (bool) {
+        return true;
+    }
+
+    /* INTERNAL */
 
     function _totalReleasedAmount(
         uint256 _streamTotalSupply,
@@ -73,14 +84,17 @@ abstract contract StreamVestingReleaseExtension is
         _ticketTokenId;
         _claimToken;
 
-        if (block.timestamp < startTimestamp) {
+        if (block.timestamp < vestingStartTimestamp) {
             return 0;
-        } else if (block.timestamp > startTimestamp + durationSeconds) {
+        } else if (
+            block.timestamp > vestingStartTimestamp + vestingDurationSeconds
+        ) {
             return _streamTotalSupply;
         } else {
             return
-                (_streamTotalSupply * (block.timestamp - startTimestamp)) /
-                durationSeconds;
+                (_streamTotalSupply *
+                    (block.timestamp - vestingStartTimestamp)) /
+                vestingDurationSeconds;
         }
     }
 }
