@@ -12,7 +12,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     hre.deployments,
     accounts[0],
     accounts[0],
-    "ERC721ShareSplitDistributor",
+    "ERC721ShareInstantDistributor",
     [
       {
         ticketToken: "0x0000000000000000000000000000000000000000",

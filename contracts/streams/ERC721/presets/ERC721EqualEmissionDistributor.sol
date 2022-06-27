@@ -11,14 +11,14 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-import "../extensions/StreamEmissionReleaseExtension.sol";
-import "../extensions/StreamEqualSplitExtension.sol";
+import "../extensions/ERC721EmissionReleaseExtension.sol";
+import "../extensions/ERC721EqualSplitExtension.sol";
 
 contract ERC721EqualEmissionDistributor is
     Initializable,
     OwnableUpgradeable,
-    StreamEmissionReleaseExtension,
-    StreamEqualSplitExtension
+    ERC721EmissionReleaseExtension,
+    ERC721EqualSplitExtension
 {
     using Address for address;
     using Address for address payable;
@@ -53,22 +53,22 @@ contract ERC721EqualEmissionDistributor is
             config.ticketToken,
             config.lockedUntilTimestamp
         );
-        __StreamEmissionReleaseExtension_init(
+        __ERC721EmissionReleaseExtension_init(
             config.emissionRate,
             config.emissionTimeUnit,
             config.emissionStart,
             config.emissionEnd
         );
-        __StreamEqualSplitExtension_init(config.totalTickets);
+        __ERC721EqualSplitExtension_init(config.totalTickets);
     }
 
     function _beforeClaim(uint256 ticketTokenId, address claimToken)
         internal
         view
-        override(ERC721MultiTokenDistributor, StreamEmissionReleaseExtension)
+        override(ERC721MultiTokenDistributor, ERC721EmissionReleaseExtension)
     {
         return
-            StreamEmissionReleaseExtension._beforeClaim(
+            ERC721EmissionReleaseExtension._beforeClaim(
                 ticketTokenId,
                 claimToken
             );

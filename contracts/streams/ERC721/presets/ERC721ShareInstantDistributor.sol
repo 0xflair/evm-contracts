@@ -11,14 +11,14 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-import "../extensions/StreamInstantReleaseExtension.sol";
-import "../extensions/StreamShareSplitExtension.sol";
+import "../extensions/ERC721InstantReleaseExtension.sol";
+import "../extensions/ERC721ShareSplitExtension.sol";
 
 contract ERC721ShareInstantDistributor is
     Initializable,
     OwnableUpgradeable,
-    StreamInstantReleaseExtension,
-    StreamShareSplitExtension
+    ERC721InstantReleaseExtension,
+    ERC721ShareSplitExtension
 {
     string public constant name = "ERC721 Share Instant Distributor";
 
@@ -46,7 +46,7 @@ contract ERC721ShareInstantDistributor is
             config.ticketToken,
             config.lockedUntilTimestamp
         );
-        __StreamInstantReleaseExtension_init();
-        __StreamShareSplitExtension_init(config.tokenIds, config.shares);
+        __ERC721InstantReleaseExtension_init();
+        __ERC721ShareSplitExtension_init(config.tokenIds, config.shares);
     }
 }

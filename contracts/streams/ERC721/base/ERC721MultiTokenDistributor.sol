@@ -4,6 +4,7 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC165Storage.sol";
 
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
@@ -11,7 +12,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-interface ERC721MultiTokenDistributorInterface {
+interface IERC721MultiTokenDistributor {
     // Claim native currency for a single ticket token
     function claim(uint256 ticketTokenId) external;
 
@@ -74,9 +75,10 @@ interface ERC721MultiTokenDistributorInterface {
 
 abstract contract ERC721MultiTokenDistributor is
     Initializable,
+    ERC165Storage,
     OwnableUpgradeable,
     ReentrancyGuard,
-    ERC721MultiTokenDistributorInterface
+    IERC721MultiTokenDistributor
 {
     using Address for address;
     using Address for address payable;
@@ -133,6 +135,8 @@ abstract contract ERC721MultiTokenDistributor is
     ) internal onlyInitializing {
         ticketToken = _ticketToken;
         lockedUntilTimestamp = _lockedUntilTimestamp;
+
+        _registerInterface(type(IERC721MultiTokenDistributor).interfaceId);
     }
 
     /* ADMIN */

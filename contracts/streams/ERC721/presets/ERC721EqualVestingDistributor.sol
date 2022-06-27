@@ -11,14 +11,14 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-import "../extensions/StreamVestingReleaseExtension.sol";
-import "../extensions/StreamEqualSplitExtension.sol";
+import "../extensions/ERC721VestingReleaseExtension.sol";
+import "../extensions/ERC721EqualSplitExtension.sol";
 
 contract ERC721EqualVestingDistributor is
     Initializable,
     OwnableUpgradeable,
-    StreamVestingReleaseExtension,
-    StreamEqualSplitExtension
+    ERC721VestingReleaseExtension,
+    ERC721EqualSplitExtension
 {
     using Address for address;
     using Address for address payable;
@@ -51,10 +51,10 @@ contract ERC721EqualVestingDistributor is
             config.ticketToken,
             config.lockedUntilTimestamp
         );
-        __StreamVestingReleaseExtension_init(
+        __ERC721VestingReleaseExtension_init(
             config.startTimestamp,
             config.durationSeconds
         );
-        __StreamEqualSplitExtension_init(config.totalTickets);
+        __ERC721EqualSplitExtension_init(config.totalTickets);
     }
 }

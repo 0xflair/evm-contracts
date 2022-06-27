@@ -11,14 +11,14 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-import "../extensions/StreamShareSplitExtension.sol";
-import "../extensions/StreamVestingReleaseExtension.sol";
+import "../extensions/ERC721ShareSplitExtension.sol";
+import "../extensions/ERC721VestingReleaseExtension.sol";
 
 contract ERC721ShareVestingDistributor is
     Initializable,
     OwnableUpgradeable,
-    StreamVestingReleaseExtension,
-    StreamShareSplitExtension
+    ERC721VestingReleaseExtension,
+    ERC721ShareSplitExtension
 {
     string public constant name = "ERC721 Share Vesting Distributor";
 
@@ -49,10 +49,10 @@ contract ERC721ShareVestingDistributor is
             config.ticketToken,
             config.lockedUntilTimestamp
         );
-        __StreamVestingReleaseExtension_init(
+        __ERC721VestingReleaseExtension_init(
             config.startTimestamp,
             config.durationSeconds
         );
-        __StreamShareSplitExtension_init(config.tokenIds, config.shares);
+        __ERC721ShareSplitExtension_init(config.tokenIds, config.shares);
     }
 }

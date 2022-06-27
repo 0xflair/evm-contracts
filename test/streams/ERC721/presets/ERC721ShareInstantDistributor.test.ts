@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { utils, BigNumberish } from "ethers";
 import hre, { deployments, getUnnamedAccounts } from "hardhat";
 
-import { ERC721ShareSplitDistributor } from "../../../../typechain";
+import { ERC721ShareInstantDistributor } from "../../../../typechain";
 import { deployPermanentContract } from "../../../../hardhat.util";
 
 import { setupTest } from "../../../setup";
@@ -13,7 +13,7 @@ const deployDistributor = async function (args?: {
   tokenIds?: BigNumberish[];
   shares?: BigNumberish[];
   lockedUntilTimestamp?: BigNumberish;
-}): Promise<ERC721ShareSplitDistributor> {
+}): Promise<ERC721ShareInstantDistributor> {
   const accounts = await getUnnamedAccounts();
   const nowMinusOneDayUnix =
     Math.floor(new Date().getTime() / 1000) - 24 * 60 * 60;
@@ -23,7 +23,7 @@ const deployDistributor = async function (args?: {
     deployments,
     accounts[0],
     accounts[0],
-    "ERC721ShareSplitDistributor",
+    "ERC721ShareInstantDistributor",
     [
       {
         // Base
@@ -35,10 +35,10 @@ const deployDistributor = async function (args?: {
         ...(args || {}),
       },
     ]
-  )) as ERC721ShareSplitDistributor;
+  )) as ERC721ShareInstantDistributor;
 };
 
-describe("ERC721ShareSplitDistributor", function () {
+describe("ERC721ShareInstantDistributor", function () {
   describe("Native Token Streams", function () {
     it("should top-up a native-token stream", async function () {
       const { userA } = await setupTest();

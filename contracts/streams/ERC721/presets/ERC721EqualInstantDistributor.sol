@@ -11,14 +11,14 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-import "../extensions/StreamInstantReleaseExtension.sol";
-import "../extensions/StreamEqualSplitExtension.sol";
+import "../extensions/ERC721InstantReleaseExtension.sol";
+import "../extensions/ERC721EqualSplitExtension.sol";
 
 contract ERC721EqualInstantDistributor is
     Initializable,
     OwnableUpgradeable,
-    StreamInstantReleaseExtension,
-    StreamEqualSplitExtension
+    ERC721InstantReleaseExtension,
+    ERC721EqualSplitExtension
 {
     string public constant name = "ERC721 Equal Instant Distributor";
 
@@ -45,6 +45,6 @@ contract ERC721EqualInstantDistributor is
             config.ticketToken,
             config.lockedUntilTimestamp
         );
-        __StreamEqualSplitExtension_init(config.totalTickets);
+        __ERC721EqualSplitExtension_init(config.totalTickets);
     }
 }

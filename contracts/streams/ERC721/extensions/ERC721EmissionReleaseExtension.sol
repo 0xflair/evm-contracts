@@ -4,6 +4,7 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC165Storage.sol";
 
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
@@ -13,13 +14,32 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "../base/ERC721MultiTokenDistributor.sol";
 
-interface IStreamEmissionReleaseExtension {
-    function hasStreamEmissionReleaseExtension() external view returns (bool);
+interface IERC721EmissionReleaseExtension {
+    function hasERC721EmissionReleaseExtension() external view returns (bool);
+
+    function setEmissionRate(uint256 newValue) external;
+
+    function setEmissionTimeUnit(uint64 newValue) external;
+
+    function setEmissionStart(uint64 newValue) external;
+
+    function setEmissionEnd(uint64 newValue) external;
+
+    function releasedAmountUntil(uint256 calcUntil)
+        external
+        view
+        returns (uint256);
+
+    function emissionAmountUntil(uint256 calcUntil)
+        external
+        view
+        returns (uint256);
 }
 
-abstract contract StreamEmissionReleaseExtension is
-    IStreamEmissionReleaseExtension,
+abstract contract ERC721EmissionReleaseExtension is
+    IERC721EmissionReleaseExtension,
     Initializable,
+    ERC165Storage,
     OwnableUpgradeable,
     ERC721MultiTokenDistributor
 {
@@ -37,14 +57,14 @@ abstract contract StreamEmissionReleaseExtension is
 
     /* INIT */
 
-    function __StreamEmissionReleaseExtension_init(
+    function __ERC721EmissionReleaseExtension_init(
         uint256 _emissionRate,
         uint64 _emissionTimeUnit,
         uint64 _emissionStart,
         uint64 _emissionEnd
     ) internal onlyInitializing {
         __Context_init();
-        __StreamEmissionReleaseExtension_init_unchained(
+        __ERC721EmissionReleaseExtension_init_unchained(
             _emissionRate,
             _emissionTimeUnit,
             _emissionStart,
@@ -52,7 +72,7 @@ abstract contract StreamEmissionReleaseExtension is
         );
     }
 
-    function __StreamEmissionReleaseExtension_init_unchained(
+    function __ERC721EmissionReleaseExtension_init_unchained(
         uint256 _emissionRate,
         uint64 _emissionTimeUnit,
         uint64 _emissionStart,
@@ -62,6 +82,8 @@ abstract contract StreamEmissionReleaseExtension is
         emissionTimeUnit = _emissionTimeUnit;
         emissionStart = _emissionStart;
         emissionEnd = _emissionEnd;
+
+        _registerInterface(type(IERC721EmissionReleaseExtension).interfaceId);
     }
 
     /* ADMIN */
@@ -100,7 +122,7 @@ abstract contract StreamEmissionReleaseExtension is
 
     /* PUBLIC */
 
-    function hasStreamEmissionReleaseExtension() external pure returns (bool) {
+    function hasERC721EmissionReleaseExtension() external pure returns (bool) {
         return true;
     }
 

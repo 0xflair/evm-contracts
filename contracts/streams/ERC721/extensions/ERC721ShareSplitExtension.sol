@@ -4,6 +4,7 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC165Storage.sol";
 
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
@@ -13,13 +14,24 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "../base/ERC721MultiTokenDistributor.sol";
 
-interface IStreamShareSplitExtension {
-    function hasStreamShareSplitExtension() external view returns (bool);
+interface IERC721ShareSplitExtension {
+    function hasERC721ShareSplitExtension() external view returns (bool);
+
+    function setSharesForTokens(
+        uint256[] memory _tokenIds,
+        uint256[] memory _shares
+    ) external;
+
+    function getSharesByTokens(uint256[] calldata _tokenIds)
+        external
+        view
+        returns (uint256[] memory);
 }
 
-abstract contract StreamShareSplitExtension is
-    IStreamShareSplitExtension,
+abstract contract ERC721ShareSplitExtension is
+    IERC721ShareSplitExtension,
     Initializable,
+    ERC165Storage,
     OwnableUpgradeable,
     ERC721MultiTokenDistributor
 {
@@ -33,19 +45,21 @@ abstract contract StreamShareSplitExtension is
 
     /* INTERNAL */
 
-    function __StreamShareSplitExtension_init(
+    function __ERC721ShareSplitExtension_init(
         uint256[] memory _tokenIds,
         uint256[] memory _shares
     ) internal onlyInitializing {
         __Context_init();
-        __StreamShareSplitExtension_init_unchained(_tokenIds, _shares);
+        __ERC721ShareSplitExtension_init_unchained(_tokenIds, _shares);
     }
 
-    function __StreamShareSplitExtension_init_unchained(
+    function __ERC721ShareSplitExtension_init_unchained(
         uint256[] memory _tokenIds,
         uint256[] memory _shares
     ) internal onlyInitializing {
         setSharesForTokens(_tokenIds, _shares);
+
+        _registerInterface(type(IERC721ShareSplitExtension).interfaceId);
     }
 
     function setSharesForTokens(
@@ -68,7 +82,7 @@ abstract contract StreamShareSplitExtension is
 
     /* PUBLIC */
 
-    function hasStreamShareSplitExtension() external pure returns (bool) {
+    function hasERC721ShareSplitExtension() external pure returns (bool) {
         return true;
     }
 

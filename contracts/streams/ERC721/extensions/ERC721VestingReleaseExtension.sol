@@ -4,6 +4,7 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC165Storage.sol";
 
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
@@ -13,13 +14,18 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "../base/ERC721MultiTokenDistributor.sol";
 
-interface IStreamVestingReleaseExtension {
-    function hasStreamVestingReleaseExtension() external view returns (bool);
+interface IERC721VestingReleaseExtension {
+    function hasERC721VestingReleaseExtension() external view returns (bool);
+
+    function setVestingStartTimestamp(uint64 newValue) external;
+
+    function setVestingDurationSeconds(uint64 newValue) external;
 }
 
-abstract contract StreamVestingReleaseExtension is
-    IStreamVestingReleaseExtension,
+abstract contract ERC721VestingReleaseExtension is
+    IERC721VestingReleaseExtension,
     Initializable,
+    ERC165Storage,
     OwnableUpgradeable,
     ERC721MultiTokenDistributor
 {
@@ -31,23 +37,25 @@ abstract contract StreamVestingReleaseExtension is
 
     /* INTERNAL */
 
-    function __StreamVestingReleaseExtension_init(
+    function __ERC721VestingReleaseExtension_init(
         uint64 _vestingStartTimestamp,
         uint64 _vestingDurationSeconds
     ) internal onlyInitializing {
         __Context_init();
-        __StreamVestingReleaseExtension_init_unchained(
+        __ERC721VestingReleaseExtension_init_unchained(
             _vestingStartTimestamp,
             _vestingDurationSeconds
         );
     }
 
-    function __StreamVestingReleaseExtension_init_unchained(
+    function __ERC721VestingReleaseExtension_init_unchained(
         uint64 _vestingStartTimestamp,
         uint64 _vestingDurationSeconds
     ) internal onlyInitializing {
         vestingStartTimestamp = _vestingStartTimestamp;
         vestingDurationSeconds = _vestingDurationSeconds;
+
+        _registerInterface(type(IERC721VestingReleaseExtension).interfaceId);
     }
 
     /* ADMIN */
@@ -70,7 +78,7 @@ abstract contract StreamVestingReleaseExtension is
 
     /* PUBLIC */
 
-    function hasStreamVestingReleaseExtension() external pure returns (bool) {
+    function hasERC721VestingReleaseExtension() external pure returns (bool) {
         return true;
     }
 

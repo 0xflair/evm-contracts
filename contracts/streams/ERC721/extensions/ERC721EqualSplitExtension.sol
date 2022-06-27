@@ -4,6 +4,7 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC165Storage.sol";
 
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
@@ -13,13 +14,16 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "../base/ERC721MultiTokenDistributor.sol";
 
-interface IStreamEqualSplitExtension {
-    function hasStreamEqualSplitExtension() external view returns (bool);
+interface IERC721EqualSplitExtension {
+    function hasERC721EqualSplitExtension() external view returns (bool);
+
+    function setTotalTickets(uint256 newValue) external;
 }
 
-abstract contract StreamEqualSplitExtension is
-    IStreamEqualSplitExtension,
+abstract contract ERC721EqualSplitExtension is
+    IERC721EqualSplitExtension,
     Initializable,
+    ERC165Storage,
     OwnableUpgradeable,
     ERC721MultiTokenDistributor
 {
@@ -28,19 +32,21 @@ abstract contract StreamEqualSplitExtension is
 
     /* INTERNAL */
 
-    function __StreamEqualSplitExtension_init(uint256 _totalTickets)
+    function __ERC721EqualSplitExtension_init(uint256 _totalTickets)
         internal
         onlyInitializing
     {
         __Context_init();
-        __StreamEqualSplitExtension_init_unchained(_totalTickets);
+        __ERC721EqualSplitExtension_init_unchained(_totalTickets);
     }
 
-    function __StreamEqualSplitExtension_init_unchained(uint256 _totalTickets)
+    function __ERC721EqualSplitExtension_init_unchained(uint256 _totalTickets)
         internal
         onlyInitializing
     {
         totalTickets = _totalTickets;
+
+        _registerInterface(type(IERC721EqualSplitExtension).interfaceId);
     }
 
     /* ADMIN */
@@ -55,7 +61,7 @@ abstract contract StreamEqualSplitExtension is
 
     /* PUBLIC */
 
-    function hasStreamEqualSplitExtension() external pure returns (bool) {
+    function hasERC721EqualSplitExtension() external pure returns (bool) {
         return true;
     }
 
