@@ -14,7 +14,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "../extensions/ERC721EmissionReleaseExtension.sol";
 import "../extensions/ERC721EqualSplitExtension.sol";
 
-contract ERC721EqualEmissionDistributor is
+contract ERC721EqualEmissionStream is
     Initializable,
     OwnableUpgradeable,
     ERC721EmissionReleaseExtension,
@@ -23,7 +23,7 @@ contract ERC721EqualEmissionDistributor is
     using Address for address;
     using Address for address payable;
 
-    string public constant name = "ERC721 Equal Emission Distributor";
+    string public constant name = "ERC721 Equal Emission Stream";
 
     string public constant version = "0.1";
 
@@ -49,7 +49,7 @@ contract ERC721EqualEmissionDistributor is
     function initialize(Config memory config) public initializer {
         __Context_init();
         __Ownable_init();
-        __ERC721MultiTokenDistributor_init(
+        __ERC721MultiTokenStream_init(
             config.ticketToken,
             config.lockedUntilTimestamp
         );
@@ -65,7 +65,7 @@ contract ERC721EqualEmissionDistributor is
     function _beforeClaim(uint256 ticketTokenId, address claimToken)
         internal
         view
-        override(ERC721MultiTokenDistributor, ERC721EmissionReleaseExtension)
+        override(ERC721MultiTokenStream, ERC721EmissionReleaseExtension)
     {
         return
             ERC721EmissionReleaseExtension._beforeClaim(

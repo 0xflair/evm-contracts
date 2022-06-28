@@ -12,7 +12,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-import "../base/ERC721MultiTokenDistributor.sol";
+import "../base/ERC721MultiTokenStream.sol";
 
 interface IERC721EmissionReleaseExtension {
     function hasERC721EmissionReleaseExtension() external view returns (bool);
@@ -41,7 +41,7 @@ abstract contract ERC721EmissionReleaseExtension is
     Initializable,
     ERC165Storage,
     OwnableUpgradeable,
-    ERC721MultiTokenDistributor
+    ERC721MultiTokenStream
 {
     // Number of tokens released every `emissionTimeUnit`
     uint256 public emissionRate;
@@ -89,34 +89,22 @@ abstract contract ERC721EmissionReleaseExtension is
     /* ADMIN */
 
     function setEmissionRate(uint256 newValue) public onlyOwner {
-        require(
-            lockedUntilTimestamp < block.timestamp,
-            "DISTRIBUTOR/CONFIG_LOCKED"
-        );
+        require(lockedUntilTimestamp < block.timestamp, "STREAM/CONFIG_LOCKED");
         emissionRate = newValue;
     }
 
     function setEmissionTimeUnit(uint64 newValue) public onlyOwner {
-        require(
-            lockedUntilTimestamp < block.timestamp,
-            "DISTRIBUTOR/CONFIG_LOCKED"
-        );
+        require(lockedUntilTimestamp < block.timestamp, "STREAM/CONFIG_LOCKED");
         emissionTimeUnit = newValue;
     }
 
     function setEmissionStart(uint64 newValue) public onlyOwner {
-        require(
-            lockedUntilTimestamp < block.timestamp,
-            "DISTRIBUTOR/CONFIG_LOCKED"
-        );
+        require(lockedUntilTimestamp < block.timestamp, "STREAM/CONFIG_LOCKED");
         emissionStart = newValue;
     }
 
     function setEmissionEnd(uint64 newValue) public onlyOwner {
-        require(
-            lockedUntilTimestamp < block.timestamp,
-            "DISTRIBUTOR/CONFIG_LOCKED"
-        );
+        require(lockedUntilTimestamp < block.timestamp, "STREAM/CONFIG_LOCKED");
         emissionEnd = newValue;
     }
 
@@ -171,12 +159,12 @@ abstract contract ERC721EmissionReleaseExtension is
         virtual
         override
     {
-        require(emissionStart < block.timestamp, "DISTRIBUTOR/NOT_STARTED");
+        require(emissionStart < block.timestamp, "STREAM/NOT_STARTED");
 
         require(
             entitlements[ticketTokenId][claimToken].lastClaimedAt <
                 block.timestamp - emissionTimeUnit,
-            "DISTRIBUTOR/TOO_EARLY"
+            "STREAM/TOO_EARLY"
         );
     }
 }

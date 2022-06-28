@@ -2,7 +2,6 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 
 import { deployPermanentContract } from "../hardhat.util";
-import { utils } from "ethers";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const accounts = await hre.getUnnamedAccounts();
@@ -12,7 +11,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     hre.deployments,
     accounts[0],
     accounts[0],
-    "ERC721ShareInstantDistributor",
+    "ERC721ShareInstantStream",
     [
       {
         ticketToken: "0x0000000000000000000000000000000000000000",

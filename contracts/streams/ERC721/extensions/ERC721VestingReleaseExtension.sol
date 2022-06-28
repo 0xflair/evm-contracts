@@ -12,7 +12,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-import "../base/ERC721MultiTokenDistributor.sol";
+import "../base/ERC721MultiTokenStream.sol";
 
 interface IERC721VestingReleaseExtension {
     function hasERC721VestingReleaseExtension() external view returns (bool);
@@ -27,7 +27,7 @@ abstract contract ERC721VestingReleaseExtension is
     Initializable,
     ERC165Storage,
     OwnableUpgradeable,
-    ERC721MultiTokenDistributor
+    ERC721MultiTokenStream
 {
     // Start of the vesting schedule
     uint64 public vestingStartTimestamp;
@@ -61,18 +61,12 @@ abstract contract ERC721VestingReleaseExtension is
     /* ADMIN */
 
     function setVestingStartTimestamp(uint64 newValue) public onlyOwner {
-        require(
-            lockedUntilTimestamp < block.timestamp,
-            "DISTRIBUTOR/CONFIG_LOCKED"
-        );
+        require(lockedUntilTimestamp < block.timestamp, "STREAM/CONFIG_LOCKED");
         vestingStartTimestamp = newValue;
     }
 
     function setVestingDurationSeconds(uint64 newValue) public onlyOwner {
-        require(
-            lockedUntilTimestamp < block.timestamp,
-            "DISTRIBUTOR/CONFIG_LOCKED"
-        );
+        require(lockedUntilTimestamp < block.timestamp, "STREAM/CONFIG_LOCKED");
         vestingDurationSeconds = newValue;
     }
 

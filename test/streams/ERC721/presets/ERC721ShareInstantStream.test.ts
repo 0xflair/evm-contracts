@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { utils, BigNumberish } from "ethers";
 import hre, { deployments, getUnnamedAccounts } from "hardhat";
 
-import { ERC721ShareInstantDistributor } from "../../../../typechain";
+import { ERC721ShareInstantStream } from "../../../../typechain";
 import { deployPermanentContract } from "../../../../hardhat.util";
 
 import { setupTest } from "../../../setup";
@@ -13,7 +13,7 @@ const deployDistributor = async function (args?: {
   tokenIds?: BigNumberish[];
   shares?: BigNumberish[];
   lockedUntilTimestamp?: BigNumberish;
-}): Promise<ERC721ShareInstantDistributor> {
+}): Promise<ERC721ShareInstantStream> {
   const accounts = await getUnnamedAccounts();
   const nowMinusOneDayUnix =
     Math.floor(new Date().getTime() / 1000) - 24 * 60 * 60;
@@ -23,7 +23,7 @@ const deployDistributor = async function (args?: {
     deployments,
     accounts[0],
     accounts[0],
-    "ERC721ShareInstantDistributor",
+    "ERC721ShareInstantStream",
     [
       {
         // Base
@@ -35,23 +35,23 @@ const deployDistributor = async function (args?: {
         ...(args || {}),
       },
     ]
-  )) as ERC721ShareInstantDistributor;
+  )) as ERC721ShareInstantStream;
 };
 
-describe("ERC721ShareInstantDistributor", function () {
+describe("ERC721ShareInstantStream", function () {
   describe("Interfaces", function () {
     it("supports IERC721ShareSplitExtension", async function () {
       await setupTest();
-      const distributor = await deployDistributor();
+      const stream = await deployDistributor();
 
-      expect(await distributor.supportsInterface("0x678f467e")).to.equal(true);
+      expect(await stream.supportsInterface("0x678f467e")).to.equal(true);
     });
 
     it("supports IERC721InstantReleaseExtension", async function () {
       await setupTest();
-      const distributor = await deployDistributor();
+      const stream = await deployDistributor();
 
-      expect(await distributor.supportsInterface("0x12599909")).to.equal(true);
+      expect(await stream.supportsInterface("0x12599909")).to.equal(true);
     });
   });
 
@@ -59,53 +59,53 @@ describe("ERC721ShareInstantDistributor", function () {
     it("should top-up a native-token stream", async function () {
       const { userA } = await setupTest();
 
-      const distributor = await deployDistributor();
+      const stream = await deployDistributor();
 
       await userA.signer.sendTransaction({
-        to: distributor.address,
+        to: stream.address,
         value: utils.parseEther("4.4"),
       });
 
-      expect(await distributor["streamTotalSupply()"]()).to.equal(
+      expect(await stream["streamTotalSupply()"]()).to.equal(
         utils.parseEther("4.4")
       );
 
       expect(
-        await distributor["streamTotalSupply(address)"](ZERO_ADDRESS)
+        await stream["streamTotalSupply(address)"](ZERO_ADDRESS)
       ).to.equal(utils.parseEther("4.4"));
     });
 
     it("should top-up multiple times", async function () {
       const { userA } = await setupTest();
 
-      const distributor = await deployDistributor();
+      const stream = await deployDistributor();
 
       await userA.signer.sendTransaction({
-        to: distributor.address,
+        to: stream.address,
         value: utils.parseEther("3.4"),
       });
 
       await userA.signer.sendTransaction({
-        to: distributor.address,
+        to: stream.address,
         value: utils.parseEther("1.1"),
       });
 
-      expect(await distributor["streamTotalSupply()"]()).to.equal(
+      expect(await stream["streamTotalSupply()"]()).to.equal(
         utils.parseEther("4.5")
       );
 
       expect(
-        await distributor["streamTotalSupply(address)"](ZERO_ADDRESS)
+        await stream["streamTotalSupply(address)"](ZERO_ADDRESS)
       ).to.equal(utils.parseEther("4.5"));
     });
 
     it("should claim 10% share with 1 single nft", async function () {
       const { userA, userB } = await setupTest();
 
-      const distributor = await deployDistributor();
+      const stream = await deployDistributor();
 
       await userA.signer.sendTransaction({
-        to: distributor.address,
+        to: stream.address,
         value: utils.parseEther("4.4"),
       });
 
@@ -114,9 +114,9 @@ describe("ERC721ShareInstantDistributor", function () {
       await increaseTime(2 * 24 * 60 * 60); // 2 days
 
       await expect(
-        await distributor.connect(userB.signer)["claim(uint256)"](2)
+        await stream.connect(userB.signer)["claim(uint256)"](2)
       ).to.changeEtherBalances(
-        [distributor, userB.signer],
+        [stream, userB.signer],
         [utils.parseEther("-0.44"), utils.parseEther("0.44")]
       );
     });
@@ -124,10 +124,10 @@ describe("ERC721ShareInstantDistributor", function () {
     it("should claim new unclaimed amounts as new owner for 1 single nft", async function () {
       const { userA, userB, userC } = await setupTest();
 
-      const distributor = await deployDistributor();
+      const stream = await deployDistributor();
 
       await userA.signer.sendTransaction({
-        to: distributor.address,
+        to: stream.address,
         value: utils.parseEther("4.4"),
       });
 
@@ -136,11 +136,11 @@ describe("ERC721ShareInstantDistributor", function () {
       await increaseTime(2 * 24 * 60 * 60); // 2 days
 
       await expect(
-        await distributor
+        await stream
           .connect(userB.signer)
           ["claim(uint256,address)"](2, ZERO_ADDRESS)
       ).to.changeEtherBalances(
-        [distributor, userB.signer],
+        [stream, userB.signer],
         [utils.parseEther("-0.44"), utils.parseEther("0.44")]
       );
 
@@ -151,18 +151,18 @@ describe("ERC721ShareInstantDistributor", function () {
       );
 
       await userA.signer.sendTransaction({
-        to: distributor.address,
+        to: stream.address,
         value: utils.parseEther("2.4"),
       });
 
       await increaseTime(3 * 24 * 60 * 60); // 3 days
 
       await expect(
-        await distributor
+        await stream
           .connect(userC.signer)
           ["claim(uint256,address)"](2, ZERO_ADDRESS)
       ).to.changeEtherBalances(
-        [distributor, userC.signer],
+        [stream, userC.signer],
         [utils.parseEther("-0.24"), utils.parseEther("0.24")]
       );
     });
@@ -170,10 +170,10 @@ describe("ERC721ShareInstantDistributor", function () {
     it("should claim unclaimed amounts when amount of shares is updated", async function () {
       const { deployer, userA, userB } = await setupTest();
 
-      const distributor = await deployDistributor();
+      const stream = await deployDistributor();
 
       await userA.signer.sendTransaction({
-        to: distributor.address,
+        to: stream.address,
         value: utils.parseEther("4.4"),
       });
 
@@ -182,31 +182,31 @@ describe("ERC721ShareInstantDistributor", function () {
       await increaseTime(2 * 24 * 60 * 60); // 2 days
 
       await expect(
-        await distributor
+        await stream
           .connect(userB.signer)
           ["claim(uint256,address)"](2, ZERO_ADDRESS)
       ).to.changeEtherBalances(
-        [distributor, userB.signer],
+        [stream, userB.signer],
         [utils.parseEther("-0.44"), utils.parseEther("0.44")]
       );
 
       await userA.signer.sendTransaction({
-        to: distributor.address,
+        to: stream.address,
         value: utils.parseEther("2.4"),
       });
 
       await increaseTime(3 * 24 * 60 * 60); // 3 days
 
-      await distributor
+      await stream
         .connect(deployer.signer)
         .setSharesForTokens([2, 4], [5000, 0]);
 
       await expect(
-        await distributor
+        await stream
           .connect(userB.signer)
           ["claim(uint256,address)"](2, ZERO_ADDRESS)
       ).to.changeEtherBalances(
-        [distributor, userB.signer],
+        [stream, userB.signer],
         [utils.parseEther("-2.96"), utils.parseEther("2.96")]
       );
     });
@@ -214,28 +214,28 @@ describe("ERC721ShareInstantDistributor", function () {
     it("should fail to claim for empty stream", async function () {
       const { userA, userB } = await setupTest();
 
-      const distributor = await deployDistributor();
+      const stream = await deployDistributor();
 
       await userA.TestERC721.mintExact(userB.signer.address, 2);
 
       await expect(
-        distributor.connect(userB.signer)["claim(uint256)"](2)
-      ).to.be.revertedWith("DISTRIBUTOR/NOTHING_TO_CLAIM");
+        stream.connect(userB.signer)["claim(uint256)"](2)
+      ).to.be.revertedWith("STREAM/NOTHING_TO_CLAIM");
 
       await expect(
-        distributor
+        stream
           .connect(userB.signer)
           ["claim(uint256,address)"](2, ZERO_ADDRESS)
-      ).to.be.revertedWith("DISTRIBUTOR/NOTHING_TO_CLAIM");
+      ).to.be.revertedWith("STREAM/NOTHING_TO_CLAIM");
     });
 
     it("should fail to claim when already claimed", async function () {
       const { userA, userB } = await setupTest();
 
-      const distributor = await deployDistributor();
+      const stream = await deployDistributor();
 
       await userA.signer.sendTransaction({
-        to: distributor.address,
+        to: stream.address,
         value: utils.parseEther("4.4"),
       });
 
@@ -244,28 +244,28 @@ describe("ERC721ShareInstantDistributor", function () {
       await increaseTime(2 * 24 * 60 * 60); // 2 days
 
       await expect(
-        await distributor
+        await stream
           .connect(userB.signer)
           ["claim(uint256,address)"](2, ZERO_ADDRESS)
       ).to.changeEtherBalances(
-        [distributor, userB.signer],
+        [stream, userB.signer],
         [utils.parseEther("-0.44"), utils.parseEther("0.44")]
       );
 
       await expect(
-        distributor
+        stream
           .connect(userB.signer)
           ["claim(uint256,address)"](2, ZERO_ADDRESS)
-      ).to.be.revertedWith("DISTRIBUTOR/NOTHING_TO_CLAIM");
+      ).to.be.revertedWith("STREAM/NOTHING_TO_CLAIM");
     });
 
     it("should claim on behalf of current nft owner", async function () {
       const { userA, userB, userC } = await setupTest();
 
-      const distributor = await deployDistributor();
+      const stream = await deployDistributor();
 
       await userA.signer.sendTransaction({
-        to: distributor.address,
+        to: stream.address,
         value: utils.parseEther("4.4"),
       });
 
@@ -274,11 +274,11 @@ describe("ERC721ShareInstantDistributor", function () {
       await increaseTime(2 * 24 * 60 * 60); // 2 days
 
       await expect(
-        await distributor
+        await stream
           .connect(userC.signer)
           ["claim(uint256,address)"](2, ZERO_ADDRESS)
       ).to.changeEtherBalances(
-        [distributor, userB.signer],
+        [stream, userB.signer],
         [utils.parseEther("-0.44"), utils.parseEther("0.44")]
       );
     });
@@ -288,54 +288,54 @@ describe("ERC721ShareInstantDistributor", function () {
     it("should top-up a erc20-based stream", async function () {
       const { userA } = await setupTest();
 
-      const distributor = await deployDistributor();
+      const stream = await deployDistributor();
 
       await userA.TestERC20.mint(userA.signer.address, utils.parseEther("44"));
       await userA.TestERC20.transfer(
-        distributor.address,
+        stream.address,
         utils.parseEther("44")
       );
 
       expect(
-        await distributor["streamTotalSupply(address)"](userA.TestERC20.address)
+        await stream["streamTotalSupply(address)"](userA.TestERC20.address)
       ).to.equal(utils.parseEther("44"));
     });
 
     it("should top-up multiple times", async function () {
       const { userA } = await setupTest();
 
-      const distributor = await deployDistributor();
+      const stream = await deployDistributor();
 
       await userA.TestERC20.mint(userA.signer.address, utils.parseEther("15"));
       await userA.TestERC20.transfer(
-        distributor.address,
+        stream.address,
         utils.parseEther("7")
       );
       await userA.TestERC20.transfer(
-        distributor.address,
+        stream.address,
         utils.parseEther("8")
       );
 
       expect(
-        await distributor["streamTotalSupply(address)"](userA.TestERC20.address)
+        await stream["streamTotalSupply(address)"](userA.TestERC20.address)
       ).to.equal(utils.parseEther("15"));
     });
 
     it("should claim 10% share with 1 single nft", async function () {
       const { userA, userB } = await setupTest();
 
-      const distributor = await deployDistributor();
+      const stream = await deployDistributor();
 
       await userA.TestERC20.mint(userA.signer.address, utils.parseEther("44"));
       await userA.TestERC20.transfer(
-        distributor.address,
+        stream.address,
         utils.parseEther("44")
       );
       await userA.TestERC721.mintExact(userB.signer.address, 2);
 
       await increaseTime(2 * 24 * 60 * 60); // 2 days
 
-      await distributor
+      await stream
         .connect(userB.signer)
         ["claim(uint256,address)"](2, userA.TestERC20.address);
 
@@ -347,18 +347,18 @@ describe("ERC721ShareInstantDistributor", function () {
     it("should claim new unclaimed amounts as new owner for 1 single nft", async function () {
       const { userA, userB, userC } = await setupTest();
 
-      const distributor = await deployDistributor();
+      const stream = await deployDistributor();
 
       await userA.TestERC20.mint(userA.signer.address, utils.parseEther("44"));
       await userA.TestERC20.transfer(
-        distributor.address,
+        stream.address,
         utils.parseEther("44")
       );
       await userA.TestERC721.mintExact(userB.signer.address, 2);
 
       await increaseTime(2 * 24 * 60 * 60); // 2 days
 
-      await distributor
+      await stream
         .connect(userB.signer)
         ["claim(uint256,address)"](2, userA.TestERC20.address);
 
@@ -374,13 +374,13 @@ describe("ERC721ShareInstantDistributor", function () {
 
       await userA.TestERC20.mint(userA.signer.address, utils.parseEther("24"));
       await userA.TestERC20.transfer(
-        distributor.address,
+        stream.address,
         utils.parseEther("24")
       );
 
       await increaseTime(3 * 24 * 60 * 60); // 3 days
 
-      await distributor
+      await stream
         .connect(userC.signer)
         ["claim(uint256,address)"](2, userA.TestERC20.address);
 
@@ -392,11 +392,11 @@ describe("ERC721ShareInstantDistributor", function () {
     it("should claim unclaimed amounts when amount of shares is updated", async function () {
       const { deployer, userA, userB } = await setupTest();
 
-      const distributor = await deployDistributor();
+      const stream = await deployDistributor();
 
       await userA.TestERC20.mint(userA.signer.address, utils.parseEther("44"));
       await userA.TestERC20.transfer(
-        distributor.address,
+        stream.address,
         utils.parseEther("44")
       );
 
@@ -404,7 +404,7 @@ describe("ERC721ShareInstantDistributor", function () {
 
       await increaseTime(2 * 24 * 60 * 60); // 2 days
 
-      await distributor
+      await stream
         .connect(userB.signer)
         ["claim(uint256,address)"](2, userA.TestERC20.address);
 
@@ -414,17 +414,17 @@ describe("ERC721ShareInstantDistributor", function () {
 
       await userA.TestERC20.mint(userA.signer.address, utils.parseEther("24"));
       await userA.TestERC20.transfer(
-        distributor.address,
+        stream.address,
         utils.parseEther("24")
       );
 
       await increaseTime(3 * 24 * 60 * 60); // 3 days
 
-      await distributor
+      await stream
         .connect(deployer.signer)
         .setSharesForTokens([2, 4], [5000, 0]);
 
-      await distributor
+      await stream
         .connect(userB.signer)
         ["claim(uint256,address)"](2, userA.TestERC20.address);
 
@@ -436,32 +436,32 @@ describe("ERC721ShareInstantDistributor", function () {
     it("should fail to claim for empty stream", async function () {
       const { userA, userB } = await setupTest();
 
-      const distributor = await deployDistributor();
+      const stream = await deployDistributor();
 
       await userA.TestERC721.mintExact(userB.signer.address, 2);
 
       await expect(
-        distributor
+        stream
           .connect(userB.signer)
           ["claim(uint256,address)"](2, userA.TestERC20.address)
-      ).to.be.revertedWith("DISTRIBUTOR/NOTHING_TO_CLAIM");
+      ).to.be.revertedWith("STREAM/NOTHING_TO_CLAIM");
     });
 
     it("should fail to claim when already claimed", async function () {
       const { userA, userB } = await setupTest();
 
-      const distributor = await deployDistributor();
+      const stream = await deployDistributor();
 
       await userA.TestERC20.mint(userA.signer.address, utils.parseEther("44"));
       await userA.TestERC20.transfer(
-        distributor.address,
+        stream.address,
         utils.parseEther("44")
       );
       await userA.TestERC721.mintExact(userB.signer.address, 2);
 
       await increaseTime(2 * 24 * 60 * 60); // 2 days
 
-      await distributor
+      await stream
         .connect(userB.signer)
         ["claim(uint256,address)"](2, userA.TestERC20.address);
 
@@ -470,27 +470,27 @@ describe("ERC721ShareInstantDistributor", function () {
       );
 
       await expect(
-        distributor
+        stream
           .connect(userB.signer)
           ["claim(uint256,address)"](2, userA.TestERC20.address)
-      ).to.be.revertedWith("DISTRIBUTOR/NOTHING_TO_CLAIM");
+      ).to.be.revertedWith("STREAM/NOTHING_TO_CLAIM");
     });
 
     it("should claim on behalf of current nft owner", async function () {
       const { userA, userB, userC } = await setupTest();
 
-      const distributor = await deployDistributor();
+      const stream = await deployDistributor();
 
       await userA.TestERC20.mint(userA.signer.address, utils.parseEther("44"));
       await userA.TestERC20.transfer(
-        distributor.address,
+        stream.address,
         utils.parseEther("44")
       );
       await userA.TestERC721.mintExact(userB.signer.address, 2);
 
       await increaseTime(2 * 24 * 60 * 60); // 2 days
 
-      await distributor
+      await stream
         .connect(userC.signer)
         ["claim(uint256,address)"](2, userA.TestERC20.address);
 

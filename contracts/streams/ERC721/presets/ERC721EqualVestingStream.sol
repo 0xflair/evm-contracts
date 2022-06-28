@@ -14,7 +14,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "../extensions/ERC721VestingReleaseExtension.sol";
 import "../extensions/ERC721EqualSplitExtension.sol";
 
-contract ERC721EqualVestingDistributor is
+contract ERC721EqualVestingStream is
     Initializable,
     OwnableUpgradeable,
     ERC721VestingReleaseExtension,
@@ -23,7 +23,7 @@ contract ERC721EqualVestingDistributor is
     using Address for address;
     using Address for address payable;
 
-    string public constant name = "ERC721 Equal Vesting Distributor";
+    string public constant name = "ERC721 Equal Vesting Stream";
 
     string public constant version = "0.1";
 
@@ -47,7 +47,7 @@ contract ERC721EqualVestingDistributor is
     function initialize(Config memory config) public initializer {
         __Context_init();
         __Ownable_init();
-        __ERC721MultiTokenDistributor_init(
+        __ERC721MultiTokenStream_init(
             config.ticketToken,
             config.lockedUntilTimestamp
         );

@@ -12,7 +12,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-import "../base/ERC721MultiTokenDistributor.sol";
+import "../base/ERC721MultiTokenStream.sol";
 
 interface IERC721ShareSplitExtension {
     function hasERC721ShareSplitExtension() external view returns (bool);
@@ -33,7 +33,7 @@ abstract contract ERC721ShareSplitExtension is
     Initializable,
     ERC165Storage,
     OwnableUpgradeable,
-    ERC721MultiTokenDistributor
+    ERC721MultiTokenStream
 {
     event SharesUpdated(uint256 tokenId, uint256 prevShares, uint256 newShares);
 
@@ -66,14 +66,8 @@ abstract contract ERC721ShareSplitExtension is
         uint256[] memory _tokenIds,
         uint256[] memory _shares
     ) public onlyOwner {
-        require(
-            _shares.length == _tokenIds.length,
-            "DISTRIBUTOR/ARGS_MISMATCH"
-        );
-        require(
-            lockedUntilTimestamp < block.timestamp,
-            "DISTRIBUTOR/CONFIG_LOCKED"
-        );
+        require(_shares.length == _tokenIds.length, "STREAM/ARGS_MISMATCH");
+        require(lockedUntilTimestamp < block.timestamp, "STREAM/CONFIG_LOCKED");
 
         for (uint256 i = 0; i < _shares.length; i++) {
             _updateShares(_tokenIds[i], _shares[i]);
@@ -118,7 +112,7 @@ abstract contract ERC721ShareSplitExtension is
         shares[tokenId] = newShares;
         totalShares = totalShares + newShares - prevShares;
 
-        require(totalShares >= 0, "DISTRIBUTOR/NEGATIVE_SHARES");
+        require(totalShares >= 0, "STREAM/NEGATIVE_SHARES");
 
         emit SharesUpdated(tokenId, prevShares, newShares);
     }

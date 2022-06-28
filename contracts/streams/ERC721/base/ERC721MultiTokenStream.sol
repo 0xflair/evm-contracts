@@ -12,7 +12,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-interface IERC721MultiTokenDistributor {
+interface IERC721MultiTokenStream {
     // Claim native currency for a single ticket token
     function claim(uint256 ticketTokenId) external;
 
@@ -73,8 +73,8 @@ interface IERC721MultiTokenDistributor {
         returns (uint256 claimableAmount);
 }
 
-abstract contract ERC721MultiTokenDistributor is
-    IERC721MultiTokenDistributor,
+abstract contract ERC721MultiTokenStream is
+    IERC721MultiTokenStream,
     Initializable,
     ERC165Storage,
     OwnableUpgradeable,
@@ -118,31 +118,31 @@ abstract contract ERC721MultiTokenDistributor is
         uint256 releasedAmount
     );
 
-    function __ERC721MultiTokenDistributor_init(
+    function __ERC721MultiTokenStream_init(
         address _ticketToken,
         uint64 _lockedUntilTimestamp
     ) internal onlyInitializing {
         __Context_init();
-        __ERC721MultiTokenDistributor_init_unchained(
+        __ERC721MultiTokenStream_init_unchained(
             _ticketToken,
             _lockedUntilTimestamp
         );
     }
 
-    function __ERC721MultiTokenDistributor_init_unchained(
+    function __ERC721MultiTokenStream_init_unchained(
         address _ticketToken,
         uint64 _lockedUntilTimestamp
     ) internal onlyInitializing {
         ticketToken = _ticketToken;
         lockedUntilTimestamp = _lockedUntilTimestamp;
 
-        _registerInterface(type(IERC721MultiTokenDistributor).interfaceId);
+        _registerInterface(type(IERC721MultiTokenStream).interfaceId);
     }
 
     /* ADMIN */
 
     function lockUntil(uint64 newValue) public onlyOwner {
-        require(newValue > lockedUntilTimestamp, "DISTRIBUTOR/CANNOT_REWIND");
+        require(newValue > lockedUntilTimestamp, "STREAM/CANNOT_REWIND");
         lockedUntilTimestamp = newValue;
     }
 
@@ -166,7 +166,7 @@ abstract contract ERC721MultiTokenDistributor is
 
         address owner = IERC721(ticketToken).ownerOf(ticketTokenId);
         uint256 claimable = claimableAmount(ticketTokenId, claimToken);
-        require(claimable > 0, "DISTRIBUTOR/NOTHING_TO_CLAIM");
+        require(claimable > 0, "STREAM/NOTHING_TO_CLAIM");
 
         /* EFFECTS */
 
@@ -205,7 +205,7 @@ abstract contract ERC721MultiTokenDistributor is
             /* CHECKS */
             require(
                 IERC721(ticketToken).ownerOf(ticketTokenIds[i]) == owner,
-                "DISTRIBUTOR/NOT_NFT_OWNER"
+                "STREAM/NOT_NFT_OWNER"
             );
 
             /* EFFECTS */

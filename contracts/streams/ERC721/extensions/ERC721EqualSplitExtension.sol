@@ -12,7 +12,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-import "../base/ERC721MultiTokenDistributor.sol";
+import "../base/ERC721MultiTokenStream.sol";
 
 interface IERC721EqualSplitExtension {
     function hasERC721EqualSplitExtension() external view returns (bool);
@@ -25,7 +25,7 @@ abstract contract ERC721EqualSplitExtension is
     Initializable,
     ERC165Storage,
     OwnableUpgradeable,
-    ERC721MultiTokenDistributor
+    ERC721MultiTokenStream
 {
     // Total number of ERC721 tokens to calculate their equal split share
     uint256 public totalTickets;
@@ -52,10 +52,7 @@ abstract contract ERC721EqualSplitExtension is
     /* ADMIN */
 
     function setTotalTickets(uint256 newValue) public onlyOwner {
-        require(
-            lockedUntilTimestamp < block.timestamp,
-            "DISTRIBUTOR/CANNOT_REWIND"
-        );
+        require(lockedUntilTimestamp < block.timestamp, "STREAM/CANNOT_REWIND");
         totalTickets = newValue;
     }
 

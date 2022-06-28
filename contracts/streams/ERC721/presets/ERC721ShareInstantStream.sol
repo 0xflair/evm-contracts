@@ -12,15 +12,15 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "../extensions/ERC721InstantReleaseExtension.sol";
-import "../extensions/ERC721EqualSplitExtension.sol";
+import "../extensions/ERC721ShareSplitExtension.sol";
 
-contract ERC721EqualInstantDistributor is
+contract ERC721ShareInstantStream is
     Initializable,
     OwnableUpgradeable,
     ERC721InstantReleaseExtension,
-    ERC721EqualSplitExtension
+    ERC721ShareSplitExtension
 {
-    string public constant name = "ERC721 Equal Instant Distributor";
+    string public constant name = "ERC721 Share Instant Stream";
 
     string public constant version = "0.1";
 
@@ -28,8 +28,9 @@ contract ERC721EqualInstantDistributor is
         // Base
         address ticketToken;
         uint64 lockedUntilTimestamp;
-        // Equal split extension
-        uint256 totalTickets;
+        // Share split extension
+        uint256[] tokenIds;
+        uint256[] shares;
     }
 
     /* INTERNAL */
@@ -41,10 +42,11 @@ contract ERC721EqualInstantDistributor is
     function initialize(Config memory config) public initializer {
         __Context_init();
         __Ownable_init();
-        __ERC721MultiTokenDistributor_init(
+        __ERC721MultiTokenStream_init(
             config.ticketToken,
             config.lockedUntilTimestamp
         );
-        __ERC721EqualSplitExtension_init(config.totalTickets);
+        __ERC721InstantReleaseExtension_init();
+        __ERC721ShareSplitExtension_init(config.tokenIds, config.shares);
     }
 }
