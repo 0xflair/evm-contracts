@@ -1,3 +1,17 @@
+### [1.11.4](https://github.com/0xflair/evm-contracts/compare/v1.11.3...v1.11.4) (2022-06-30)
+
+
+### Bug Fixes
+
+* add factory and erc721a for gas savings ([#10](https://github.com/0xflair/evm-contracts/issues/10)) ([0ac9d46](https://github.com/0xflair/evm-contracts/commit/0ac9d46a794bf6b0785808fb43ec8c2bccc34860))
+
+### [1.11.3](https://github.com/0xflair/evm-contracts/compare/v1.11.2...v1.11.3) (2022-06-30)
+
+
+### Bug Fixes
+
+* use uint64 for timestamps ([e476400](https://github.com/0xflair/evm-contracts/commit/e476400843a0539811b560334f8f29d3371127ae))
+
 ### [1.11.2](https://github.com/0xflair/evm-contracts/compare/v1.11.1...v1.11.2) (2022-06-29)
 
 
