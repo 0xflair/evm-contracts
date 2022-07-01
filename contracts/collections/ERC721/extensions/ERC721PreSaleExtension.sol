@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/utils/introspection/ERC165Storage.sol";
 
 import "./ERC721AutoIdMinterExtension.sol";
 
-interface ERC721PreSaleExtensionInterface {
+interface IERC721PreSaleExtension {
     function setPreSalePrice(uint256 newValue) external;
 
     function setPreSaleMaxMintPerWallet(uint256 newValue) external;
@@ -33,10 +33,10 @@ interface ERC721PreSaleExtensionInterface {
  */
 abstract contract ERC721PreSaleExtension is
     Initializable,
+    IERC721PreSaleExtension,
     ERC165Storage,
     ERC721AutoIdMinterExtension,
-    ReentrancyGuard,
-    ERC721PreSaleExtensionInterface
+    ReentrancyGuard
 {
     uint256 public preSalePrice;
     uint256 public preSaleMaxMintPerWallet;
@@ -59,13 +59,13 @@ abstract contract ERC721PreSaleExtension is
         uint256 _preSalePrice,
         uint256 _preSaleMaxMintPerWallet
     ) internal onlyInitializing {
+        _registerInterface(type(IERC721PreSaleExtension).interfaceId);
+
         preSalePrice = _preSalePrice;
         preSaleMaxMintPerWallet = _preSaleMaxMintPerWallet;
-
-        _registerInterface(type(ERC721PreSaleExtensionInterface).interfaceId);
     }
 
-    // ADMIN
+    /* ADMIN */
 
     function setPreSalePrice(uint256 newValue) external onlyOwner {
         preSalePrice = newValue;
@@ -83,7 +83,7 @@ abstract contract ERC721PreSaleExtension is
         preSaleStatus = isActive;
     }
 
-    // PUBLIC
+    /* PUBLIC */
 
     function supportsInterface(bytes4 interfaceId)
         public
@@ -136,7 +136,7 @@ abstract contract ERC721PreSaleExtension is
         _mintTo(to, count);
     }
 
-    // INTERNAL
+    /* INTERNAL */
 
     function _generateMerkleLeaf(address account)
         internal

@@ -2,12 +2,13 @@
 
 pragma solidity ^0.8.9;
 
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Storage.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 
-interface ERC721CollectionMetadataExtensionInterface {
+interface IERC721CollectionMetadataExtension {
     function setContractURI(string memory newValue) external;
 
     function contractURI() external view returns (string memory);
@@ -17,11 +18,11 @@ interface ERC721CollectionMetadataExtensionInterface {
  * @dev Extension to allow configuring contract-level collection metadata URI.
  */
 abstract contract ERC721CollectionMetadataExtension is
+    IERC721CollectionMetadataExtension,
     Initializable,
     Ownable,
     ERC165Storage,
-    IERC721Metadata,
-    ERC721CollectionMetadataExtensionInterface
+    IERC721Metadata
 {
     string private _name;
 
@@ -51,19 +52,19 @@ abstract contract ERC721CollectionMetadataExtension is
         _contractURI = contractURI_;
 
         _registerInterface(
-            type(ERC721CollectionMetadataExtensionInterface).interfaceId
+            type(IERC721CollectionMetadataExtension).interfaceId
         );
         _registerInterface(type(IERC721).interfaceId);
         _registerInterface(type(IERC721Metadata).interfaceId);
     }
 
-    // ADMIN
+    /* ADMIN */
 
     function setContractURI(string memory newValue) external onlyOwner {
         _contractURI = newValue;
     }
 
-    // PUBLIC
+    /* PUBLIC */
 
     function name() public view virtual override returns (string memory) {
         return _name;

@@ -12,7 +12,7 @@ import "../../../misc/rarible/IRoyalties.sol";
 import "../../../misc/rarible/LibPart.sol";
 import "../../../misc/rarible/LibRoyaltiesV2.sol";
 
-interface ERC721RoyaltyExtensionInterface {
+interface IERC721RoyaltyExtension {
     function setTokenRoyalties(
         IEIP2981RoyaltyOverride.TokenRoyaltyConfig[] calldata royaltyConfigs
     ) external;
@@ -35,11 +35,11 @@ interface ERC721RoyaltyExtensionInterface {
  */
 abstract contract ERC721RoyaltyExtension is
     Initializable,
+    IERC721RoyaltyExtension,
+    IRoyalties,
     Ownable,
     ERC165Storage,
-    EIP2981RoyaltyOverrideCore,
-    IRoyalties,
-    ERC721RoyaltyExtensionInterface
+    EIP2981RoyaltyOverrideCore
 {
     function __ERC721RoyaltyExtension_init(
         address defaultRoyaltyReceiver,
@@ -55,22 +55,22 @@ abstract contract ERC721RoyaltyExtension is
         address defaultRoyaltyReceiver,
         uint16 defaultRoyaltyBps
     ) internal onlyInitializing {
+        _registerInterface(type(IERC721RoyaltyExtension).interfaceId);
+        _registerInterface(type(IEIP2981).interfaceId);
+        _registerInterface(type(IEIP2981RoyaltyOverride).interfaceId);
+        _registerInterface(LibRoyaltiesV2._INTERFACE_ID_ROYALTIES);
+
         TokenRoyalty memory royalty = TokenRoyalty(
             defaultRoyaltyReceiver,
             defaultRoyaltyBps
         );
 
         _setDefaultRoyalty(royalty);
-
-        _registerInterface(type(ERC721RoyaltyExtensionInterface).interfaceId);
-        _registerInterface(type(IEIP2981).interfaceId);
-        _registerInterface(type(IEIP2981RoyaltyOverride).interfaceId);
-        _registerInterface(LibRoyaltiesV2._INTERFACE_ID_ROYALTIES);
     }
 
     function setTokenRoyalties(TokenRoyaltyConfig[] calldata royaltyConfigs)
         external
-        override(IEIP2981RoyaltyOverride, ERC721RoyaltyExtensionInterface)
+        override(IEIP2981RoyaltyOverride, IERC721RoyaltyExtension)
         onlyOwner
     {
         _setTokenRoyalties(royaltyConfigs);
@@ -78,7 +78,7 @@ abstract contract ERC721RoyaltyExtension is
 
     function setDefaultRoyalty(TokenRoyalty calldata royalty)
         external
-        override(IEIP2981RoyaltyOverride, ERC721RoyaltyExtensionInterface)
+        override(IEIP2981RoyaltyOverride, IERC721RoyaltyExtension)
         onlyOwner
     {
         _setDefaultRoyalty(royalty);
@@ -87,7 +87,7 @@ abstract contract ERC721RoyaltyExtension is
     function getRaribleV2Royalties(uint256 id)
         external
         view
-        override(IRoyalties, ERC721RoyaltyExtensionInterface)
+        override(IRoyalties, IERC721RoyaltyExtension)
         returns (LibPart.Part[] memory result)
     {
         result = new LibPart.Part[](1);
@@ -99,7 +99,7 @@ abstract contract ERC721RoyaltyExtension is
         // avoid unused param warning
     }
 
-    // PUBLIC
+    /* PUBLIC */
 
     function supportsInterface(bytes4 interfaceId)
         public

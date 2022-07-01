@@ -51,11 +51,16 @@ contract ERC721FullFeaturedCollection is
     }
 
     constructor(Config memory config) ERC721(config.name, config.symbol) {
-        initialize(config);
+        initialize(config, msg.sender);
     }
 
-    function initialize(Config memory config) public initializer {
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    function initialize(Config memory config, address deployer)
+        public
+        initializer
+    {
+        _setupRole(DEFAULT_ADMIN_ROLE, deployer);
+
+        _transferOwnership(deployer);
 
         __ERC721CollectionMetadataExtension_init(
             config.name,
@@ -104,10 +109,24 @@ contract ERC721FullFeaturedCollection is
         return super._msgData();
     }
 
-    // PUBLIC
+    /* PUBLIC */
 
-    function name() public view override returns (string memory) {
-        return super.name();
+    function name()
+        public
+        view
+        override(ERC721, ERC721AutoIdMinterExtension)
+        returns (string memory)
+    {
+        return ERC721AutoIdMinterExtension.name();
+    }
+
+    function symbol()
+        public
+        view
+        override(ERC721, ERC721AutoIdMinterExtension)
+        returns (string memory)
+    {
+        return ERC721AutoIdMinterExtension.symbol();
     }
 
     function supportsInterface(bytes4 interfaceId)
@@ -117,7 +136,6 @@ contract ERC721FullFeaturedCollection is
         override(
             ERC165Storage,
             ERC721PrefixedMetadataExtension,
-            ERC721AutoIdMinterExtension,
             ERC721PreSaleExtension,
             ERC721PublicSaleExtension,
             ERC721SimpleProceedsExtension,
@@ -140,7 +158,7 @@ contract ERC721FullFeaturedCollection is
     function isApprovedForAll(address owner, address operator)
         public
         view
-        override(IERC721, ERC721, ERC721OpenSeaNoGasExtension)
+        override(ERC721, ERC721OpenSeaNoGasExtension)
         returns (bool)
     {
         return
@@ -152,7 +170,7 @@ contract ERC721FullFeaturedCollection is
         public
         view
         virtual
-        override(ERC721, IERC721Metadata, ERC721PrefixedMetadataExtension)
+        override(ERC721, ERC721PrefixedMetadataExtension)
         returns (string memory)
     {
         return ERC721PrefixedMetadataExtension.tokenURI(_tokenId);

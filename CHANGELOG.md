@@ -1,3 +1,93 @@
+## [1.12.0](https://github.com/0xflair/evm-contracts/compare/v1.11.5...v1.12.0) (2022-07-01)
+
+
+### Features
+
+* deploy factory on all chains ([5b384b5](https://github.com/0xflair/evm-contracts/commit/5b384b5dfb0dd512c4192e375bbc31a1054070e9))
+
+
+### Bug Fixes
+
+* upgrade etherscan module to support sepolia ([25e7681](https://github.com/0xflair/evm-contracts/commit/25e7681adfcebcaa5be635e376a16b675fbb2792))
+* use close factory without receive function ([6ee4359](https://github.com/0xflair/evm-contracts/commit/6ee43590ebf6e26d5ae59ae7a44ae1a45a2e2148))
+
+### [1.11.5](https://github.com/0xflair/evm-contracts/compare/v1.11.4...v1.11.5) (2022-06-30)
+
+
+### Bug Fixes
+
+* use unique names for erc721a files ([#11](https://github.com/0xflair/evm-contracts/issues/11)) ([dbb22a0](https://github.com/0xflair/evm-contracts/commit/dbb22a089e06843a30971991c2b200ede7db875f))
+
+### [1.11.4](https://github.com/0xflair/evm-contracts/compare/v1.11.3...v1.11.4) (2022-06-30)
+
+
+### Bug Fixes
+
+* add factory and erc721a for gas savings ([#10](https://github.com/0xflair/evm-contracts/issues/10)) ([0ac9d46](https://github.com/0xflair/evm-contracts/commit/0ac9d46a794bf6b0785808fb43ec8c2bccc34860))
+
+### [1.11.3](https://github.com/0xflair/evm-contracts/compare/v1.11.2...v1.11.3) (2022-06-30)
+
+
+### Bug Fixes
+
+* use uint64 for timestamps ([e476400](https://github.com/0xflair/evm-contracts/commit/e476400843a0539811b560334f8f29d3371127ae))
+
+### [1.11.2](https://github.com/0xflair/evm-contracts/compare/v1.11.1...v1.11.2) (2022-06-29)
+
+
+### Bug Fixes
+
+* allow emissions to be indefinite ([#9](https://github.com/0xflair/evm-contracts/issues/9)) ([b3bee09](https://github.com/0xflair/evm-contracts/commit/b3bee0981c145bf73a9b759800d063e8e5575aa7))
+
+### [1.11.1](https://github.com/0xflair/evm-contracts/compare/v1.11.0...v1.11.1) (2022-06-29)
+
+
+### Bug Fixes
+
+* use consistent naming for methods ([#8](https://github.com/0xflair/evm-contracts/issues/8)) ([a4ee3dd](https://github.com/0xflair/evm-contracts/commit/a4ee3dd62d59a07431afcba04fee98c9a3bb52ef))
+
+## [1.11.0](https://github.com/0xflair/evm-contracts/compare/v1.10.1...v1.11.0) (2022-06-28)
+
+
+### Features
+
+* extract stream extensions and create various presets ([#7](https://github.com/0xflair/evm-contracts/issues/7)) ([555db38](https://github.com/0xflair/evm-contracts/commit/555db385b0e3e90909339aaec5a6f2954f4724ca))
+
+### [1.10.1](https://github.com/0xflair/evm-contracts/compare/v1.10.0...v1.10.1) (2022-06-26)
+
+
+### Bug Fixes
+
+* proper returning for share values ([2e3faac](https://github.com/0xflair/evm-contracts/commit/2e3faac4fc8e3fd61175813cd7765fb8afb99a38))
+
+## [1.10.0](https://github.com/0xflair/evm-contracts/compare/v1.9.2...v1.10.0) (2022-06-26)
+
+### [1.9.2](https://github.com/0xflair/evm-contracts/compare/v1.9.1...v1.9.2) (2022-06-25)
+
+
+### Bug Fixes
+
+* expose current state of max supply publicly ([2cb2242](https://github.com/0xflair/evm-contracts/commit/2cb2242ea3247a8005ddfd2e66df046db1deb1e2))
+
+### [1.9.1](https://github.com/0xflair/evm-contracts/compare/v1.9.0...v1.9.1) (2022-06-22)
+
+
+### Bug Fixes
+
+* add royalty extension to managed prefix collection ([#6](https://github.com/0xflair/evm-contracts/issues/6)) ([e90611f](https://github.com/0xflair/evm-contracts/commit/e90611fec3d8daa2fc018fb12a34e9aeeb18c1ea))
+
+## [1.9.0](https://github.com/0xflair/evm-contracts/compare/v1.8.12...v1.9.0) (2022-06-20)
+
+
+### Features
+
+* add NFT holder split distributor preset ([#5](https://github.com/0xflair/evm-contracts/issues/5)) ([891e077](https://github.com/0xflair/evm-contracts/commit/891e07727f9f07c5ffc0126327ca135466eaac39))
+
+
+### Bug Fixes
+
+* move upstream contracts to deps ([ed64073](https://github.com/0xflair/evm-contracts/commit/ed640736663fa60984f7d30e5833c7a21f5810ce))
+
 ### [1.8.12](https://github.com/0xflair/evm-contracts/compare/v1.8.11...v1.8.12) (2022-06-07)
 
 

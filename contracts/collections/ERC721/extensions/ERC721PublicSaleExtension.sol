@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/utils/introspection/ERC165Storage.sol";
 
 import "./ERC721AutoIdMinterExtension.sol";
 
-interface ERC721PublicSaleExtensionInterface {
+interface IERC721PublicSaleExtension {
     function setPublicSalePrice(uint256 newValue) external;
 
     function setPublicSaleMaxMintPerTx(uint256 newValue) external;
@@ -20,15 +20,15 @@ interface ERC721PublicSaleExtensionInterface {
 }
 
 /**
- * @dev Extension to provide pre-sale and public-sale capabilities for colelctors to mint for a specific price.
+ * @dev Extension to provide pre-sale and public-sale capabilities for collectors to mint for a specific price.
  */
 abstract contract ERC721PublicSaleExtension is
     Initializable,
+    IERC721PublicSaleExtension,
     Ownable,
     ERC165Storage,
     ERC721AutoIdMinterExtension,
-    ReentrancyGuard,
-    ERC721PublicSaleExtensionInterface
+    ReentrancyGuard
 {
     uint256 public publicSalePrice;
     uint256 public publicSaleMaxMintPerTx;
@@ -48,15 +48,13 @@ abstract contract ERC721PublicSaleExtension is
         uint256 _publicSalePrice,
         uint256 _publicSaleMaxMintPerTx
     ) internal onlyInitializing {
+        _registerInterface(type(IERC721PublicSaleExtension).interfaceId);
+
         publicSalePrice = _publicSalePrice;
         publicSaleMaxMintPerTx = _publicSaleMaxMintPerTx;
-
-        _registerInterface(
-            type(ERC721PublicSaleExtensionInterface).interfaceId
-        );
     }
 
-    // ADMIN
+    /* ADMIN */
 
     function setPublicSalePrice(uint256 newValue) external onlyOwner {
         publicSalePrice = newValue;
@@ -70,7 +68,7 @@ abstract contract ERC721PublicSaleExtension is
         publicSaleStatus = isActive;
     }
 
-    // PUBLIC
+    /* PUBLIC */
 
     function supportsInterface(bytes4 interfaceId)
         public
@@ -87,7 +85,7 @@ abstract contract ERC721PublicSaleExtension is
         payable
         nonReentrant
     {
-        require(publicSaleStatus, "PRE_SALE_NOT_ACTIVE");
+        require(publicSaleStatus, "PUBLIC_SALE_NOT_ACTIVE");
         require(count <= publicSaleMaxMintPerTx, "PUBLIC_SALE_LIMIT");
         require(publicSalePrice * count <= msg.value, "INSUFFICIENT_AMOUNT");
 

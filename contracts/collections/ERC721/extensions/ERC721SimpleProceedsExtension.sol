@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Storage.sol";
 
-interface ERC721SimpleProceedsExtensionInterface {
+interface IERC721SimpleProceedsExtension {
     function setProceedsRecipient(address _proceedsRecipient) external;
 
     function lockProceedsRecipient() external;
@@ -19,9 +19,9 @@ interface ERC721SimpleProceedsExtensionInterface {
  */
 abstract contract ERC721SimpleProceedsExtension is
     Initializable,
+    IERC721SimpleProceedsExtension,
     Ownable,
-    ERC165Storage,
-    ERC721SimpleProceedsExtensionInterface
+    ERC165Storage
 {
     address public proceedsRecipient;
     bool public proceedsRecipientLocked;
@@ -36,32 +36,35 @@ abstract contract ERC721SimpleProceedsExtension is
     function __ERC721SimpleProceedsExtension_init_unchained(
         address _proceedsRecipient
     ) internal onlyInitializing {
-        _registerInterface(
-            type(ERC721SimpleProceedsExtensionInterface).interfaceId
-        );
+        _registerInterface(type(IERC721SimpleProceedsExtension).interfaceId);
 
         proceedsRecipient = _proceedsRecipient;
     }
 
-    // ADMIN
+    /* ADMIN */
 
-    function setProceedsRecipient(address _proceedsRecipient) external {
+    function setProceedsRecipient(address _proceedsRecipient)
+        external
+        onlyOwner
+    {
         require(!proceedsRecipientLocked, "ERC721/RECIPIENT_LOCKED");
         proceedsRecipient = _proceedsRecipient;
     }
 
-    function lockProceedsRecipient() external {
+    function lockProceedsRecipient() external onlyOwner {
         require(!proceedsRecipientLocked, "ERC721/RECIPIENT_LOCKED");
         proceedsRecipientLocked = true;
     }
 
     function withdraw() external {
+        require(proceedsRecipient != address(0), "ERC721/NO_RECIPIENT");
+
         uint256 balance = address(this).balance;
 
         payable(proceedsRecipient).transfer(balance);
     }
 
-    // PUBLIC
+    /* PUBLIC */
 
     function supportsInterface(bytes4 interfaceId)
         public

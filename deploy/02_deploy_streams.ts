@@ -2,7 +2,6 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 
 import { deployPermanentContract } from "../hardhat.util";
-import { utils } from "ethers";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const accounts = await hre.getUnnamedAccounts();
@@ -12,15 +11,30 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     hre.deployments,
     accounts[0],
     accounts[0],
-    "ERC721HolderVestedDistributor",
+    "ERC721EqualEmissionStream",
     [
       {
-        claimToken: "0x0000000000000000000000000000000000000000",
         ticketToken: "0x0000000000000000000000000000000000000000",
-        vestingRate: utils.parseEther("1"),
-        vestingTimeUnit: 60 * 60, // 1 hour
-        claimStart: 0,
-        claimEnd: 999999999999999,
+        lockedUntilTimestamp: 0,
+        totalTickets: 0,
+        emissionRate: 0,
+        emissionTimeUnit: 0,
+        emissionStart: 0,
+        emissionEnd: 0,
+      },
+    ]
+  );
+  await deployPermanentContract(
+    hre.deployments,
+    accounts[0],
+    accounts[0],
+    "ERC721ShareInstantStream",
+    [
+      {
+        ticketToken: "0x0000000000000000000000000000000000000000",
+        lockedUntilTimestamp: 0,
+        tokenIds: [],
+        shares: [],
       },
     ]
   );

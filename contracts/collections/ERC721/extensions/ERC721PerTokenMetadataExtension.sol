@@ -2,13 +2,13 @@
 
 pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Storage.sol";
 
-interface ERC721PerTokenMetadataExtensionInterface {
+interface IERC721PerTokenMetadataExtension {
     function freezeTokenURIs(uint256 _lastFrozenTokenId) external;
 
     function setTokenURI(uint256 tokenId, string memory tokenURI) external;
@@ -20,11 +20,11 @@ interface ERC721PerTokenMetadataExtensionInterface {
  *      To enable true self-custody for token owners, an admin can freeze URIs using a token ID pointer that can only be increased.
  */
 abstract contract ERC721PerTokenMetadataExtension is
+    IERC721PerTokenMetadataExtension,
     Initializable,
     Ownable,
     ERC165Storage,
-    ERC721URIStorage,
-    ERC721PerTokenMetadataExtensionInterface
+    ERC721URIStorage
 {
     uint256 public lastFrozenTokenId;
 
@@ -39,12 +39,10 @@ abstract contract ERC721PerTokenMetadataExtension is
         internal
         onlyInitializing
     {
-        _registerInterface(
-            type(ERC721PerTokenMetadataExtensionInterface).interfaceId
-        );
+        _registerInterface(type(IERC721PerTokenMetadataExtension).interfaceId);
     }
 
-    // ADMIN
+    /* ADMIN */
 
     function freezeTokenURIs(uint256 _lastFrozenTokenId) external onlyOwner {
         require(_lastFrozenTokenId > lastFrozenTokenId, "CANNOT_UNFREEZE");
@@ -59,7 +57,7 @@ abstract contract ERC721PerTokenMetadataExtension is
         _setTokenURI(tokenId, tokenURI);
     }
 
-    // PUBLIC
+    /* PUBLIC */
 
     function supportsInterface(bytes4 interfaceId)
         public

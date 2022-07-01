@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/utils/introspection/ERC165Storage.sol";
 
 import "./ERC721CollectionMetadataExtension.sol";
 
-interface ERC721PrefixedMetadataExtensionInterface {
+interface IERC721PrefixedMetadataExtension {
     function setPlaceholderURI(string memory newValue) external;
 
     function setBaseURI(string memory newValue) external;
@@ -31,14 +31,16 @@ interface ERC721PrefixedMetadataExtensionInterface {
  *      It also allows configuring a fallback "placeholder" URI when prefix is not set yet.
  */
 abstract contract ERC721PrefixedMetadataExtension is
+    IERC721PrefixedMetadataExtension,
     Initializable,
     Ownable,
     ERC165Storage,
-    ERC721PrefixedMetadataExtensionInterface
+    ERC721
 {
-    string private _placeholderURI;
-    string private _baseTokenURI;
-    bool private _baseURIFrozen;
+    string internal _placeholderURI;
+    string internal _baseTokenURI;
+
+    bool public baseURIFrozen;
 
     function __ERC721PrefixedMetadataExtension_init(
         string memory placeholderURI_
@@ -51,34 +53,32 @@ abstract contract ERC721PrefixedMetadataExtension is
     ) internal onlyInitializing {
         _placeholderURI = placeholderURI_;
 
-        _registerInterface(
-            type(ERC721PrefixedMetadataExtensionInterface).interfaceId
-        );
+        _registerInterface(type(IERC721PrefixedMetadataExtension).interfaceId);
         _registerInterface(type(IERC721Metadata).interfaceId);
     }
 
-    // ADMIN
+    /* ADMIN */
 
     function setPlaceholderURI(string memory newValue) external onlyOwner {
         _placeholderURI = newValue;
     }
 
     function setBaseURI(string memory newValue) external onlyOwner {
-        require(!_baseURIFrozen, "BASE_URI_FROZEN");
+        require(!baseURIFrozen, "BASE_URI_FROZEN");
         _baseTokenURI = newValue;
     }
 
     function freezeBaseURI() external onlyOwner {
-        _baseURIFrozen = true;
+        baseURIFrozen = true;
     }
 
-    // PUBLIC
+    /* PUBLIC */
 
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(ERC165Storage)
+        override(ERC165Storage, ERC721)
         returns (bool)
     {
         return ERC165Storage.supportsInterface(interfaceId);
@@ -96,7 +96,7 @@ abstract contract ERC721PrefixedMetadataExtension is
         public
         view
         virtual
-        override(ERC721PrefixedMetadataExtensionInterface)
+        override(ERC721, IERC721PrefixedMetadataExtension)
         returns (string memory)
     {
         return

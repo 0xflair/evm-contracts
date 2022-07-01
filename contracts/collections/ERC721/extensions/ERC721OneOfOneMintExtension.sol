@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.9;
 
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Storage.sol";
@@ -9,7 +10,7 @@ import "@openzeppelin/contracts/utils/introspection/ERC165Storage.sol";
 import "./ERC721AutoIdMinterExtension.sol";
 import "./ERC721PerTokenMetadataExtension.sol";
 
-interface ERC721OneOfOneMintExtensionInterface {
+interface IERC721OneOfOneMintExtension {
     function mintWithTokenURIsByOwner(
         address to,
         uint256 count,
@@ -29,12 +30,13 @@ interface ERC721OneOfOneMintExtensionInterface {
  * @dev Extension to allow owner to mint 1-of-1 NFTs by providing dedicated metadata URI for each token.
  */
 abstract contract ERC721OneOfOneMintExtension is
+    IERC721OneOfOneMintExtension,
+    Initializable,
     Ownable,
     ERC165Storage,
     AccessControl,
     ERC721AutoIdMinterExtension,
-    ERC721PerTokenMetadataExtension,
-    ERC721OneOfOneMintExtensionInterface
+    ERC721PerTokenMetadataExtension
 {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
@@ -46,12 +48,10 @@ abstract contract ERC721OneOfOneMintExtension is
         internal
         onlyInitializing
     {
-        _registerInterface(
-            type(ERC721OneOfOneMintExtensionInterface).interfaceId
-        );
+        _registerInterface(type(IERC721OneOfOneMintExtension).interfaceId);
     }
 
-    // ADMIN
+    /* ADMIN */
 
     function mintWithTokenURIsByOwner(
         address to,
@@ -79,7 +79,7 @@ abstract contract ERC721OneOfOneMintExtension is
         }
     }
 
-    // PUBLIC
+    /* PUBLIC */
 
     function supportsInterface(bytes4 interfaceId)
         public
@@ -96,11 +96,31 @@ abstract contract ERC721OneOfOneMintExtension is
         return ERC165Storage.supportsInterface(interfaceId);
     }
 
+    function name()
+        public
+        view
+        virtual
+        override(ERC721, ERC721AutoIdMinterExtension)
+        returns (string memory)
+    {
+        return ERC721AutoIdMinterExtension.name();
+    }
+
+    function symbol()
+        public
+        view
+        virtual
+        override(ERC721, ERC721AutoIdMinterExtension)
+        returns (string memory)
+    {
+        return ERC721AutoIdMinterExtension.symbol();
+    }
+
     function tokenURI(uint256 tokenId)
         public
         view
         virtual
-        override(ERC721, ERC721URIStorage, ERC721OneOfOneMintExtensionInterface)
+        override(ERC721, ERC721URIStorage, IERC721OneOfOneMintExtension)
         returns (string memory)
     {
         return ERC721URIStorage.tokenURI(tokenId);
