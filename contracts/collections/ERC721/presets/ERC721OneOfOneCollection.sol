@@ -55,6 +55,7 @@ contract ERC721OneOfOneCollection is
             config.contractURI
         );
         __ERC721PerTokenMetadataExtension_init();
+        __ERC721OwnerMintExtension_init();
         __ERC721OneOfOneMintExtension_init();
         __ERC721AutoIdMinterExtension_init(config.maxSupply);
         __ERC721RoyaltyExtension_init(

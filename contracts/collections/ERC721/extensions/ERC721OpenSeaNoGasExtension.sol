@@ -103,6 +103,6 @@ abstract contract ERC721OpenSeaNoGasExtension is
             }
         }
 
-        return false;
+        return super.isApprovedForAll(owner, operator);
     }
 }

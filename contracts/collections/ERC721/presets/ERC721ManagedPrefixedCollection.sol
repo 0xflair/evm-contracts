@@ -63,11 +63,14 @@ contract ERC721ManagedPrefixedCollection is
         );
         __ERC721PrefixedMetadataExtension_init(config.placeholderURI);
         __ERC721AutoIdMinterExtension_init(config.maxSupply);
+        __ERC721OwnerMintExtension_init();
+        __ERC721OwnerManagedExtension_init();
         __ERC721RoyaltyExtension_init(
             config.defaultRoyaltyAddress,
             config.defaultRoyaltyBps
         );
         __ERC2771ContextOwnable_init(config.trustedForwarder);
+        __ERC721BulkifyExtension_init();
 
         maxSupply = config.maxSupply;
 

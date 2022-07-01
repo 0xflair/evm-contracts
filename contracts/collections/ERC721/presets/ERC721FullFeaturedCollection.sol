@@ -61,7 +61,17 @@ contract ERC721FullFeaturedCollection is
         _setupRole(DEFAULT_ADMIN_ROLE, deployer);
 
         _transferOwnership(deployer);
-
+        /*
+ERC721PrefixedMetadataExtension
+ERC721OwnerMintExtension
+ERC721PreSaleExtension
+ERC721PublicSaleExtension
+ERC721SimpleProceedsExtension
+ERC721RoleBasedMintExtension
+ERC721RoyaltyExtension
+ERC721OpenSeaNoGasExtension
+ERC2771ContextOwnable
+ERC721BulkifyExtension*/
         __ERC721CollectionMetadataExtension_init(
             config.name,
             config.symbol,
@@ -69,6 +79,8 @@ contract ERC721FullFeaturedCollection is
         );
         __ERC721PrefixedMetadataExtension_init(config.placeholderURI);
         __ERC721AutoIdMinterExtension_init(config.maxSupply);
+        __ERC721OwnerMintExtension_init();
+        __ERC721RoleBasedMintExtension_init(deployer);
         __ERC721PreSaleExtension_init_unchained(
             config.preSalePrice,
             config.preSaleMaxMintPerWallet
@@ -87,6 +99,7 @@ contract ERC721FullFeaturedCollection is
             config.openSeaExchangeAddress
         );
         __ERC2771ContextOwnable_init(config.trustedForwarder);
+        __ERC721BulkifyExtension_init();
     }
 
     function _msgSender()
