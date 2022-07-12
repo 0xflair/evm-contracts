@@ -38,7 +38,7 @@
     "deploy:goerli": "npx hardhat deploy --network goerli",
     "deploy:sepolia": "npx hardhat deploy --network sepolia",
     "deploy:opera": "npx hardhat deploy --network opera",
-    "deploy:ftmTestnet": "npx hardhat deploy --network ftmTestnet --solc-input",
+    "deploy:ftmTestnet": "npx hardhat deploy --network ftmTestnet",
     "deploy:avalanche": "npx hardhat deploy --network avalanche",
     "deploy:avalancheFujiTestnet": "npx hardhat deploy --network avalancheFujiTestnet",
     "deploy:arbitrumOne": "npx hardhat deploy --network arbitrumOne",
