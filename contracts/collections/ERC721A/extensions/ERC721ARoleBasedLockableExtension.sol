@@ -7,9 +7,9 @@ import "@openzeppelin/contracts/utils/introspection/ERC165Storage.sol";
 import "@openzeppelin/contracts/utils/structs/BitMaps.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-import "./ERC721LockableExtension.sol";
+import "./ERC721ALockableExtension.sol";
 
-interface IERC721RoleBasedLockableExtension {
+interface IERC721ARoleBasedLockableExtension {
     function hasRoleBasedLockableExtension() external view returns (bool);
 
     function lock(uint256[] calldata) external;
@@ -20,27 +20,29 @@ interface IERC721RoleBasedLockableExtension {
 /**
  * @dev Extension to allow locking NFTs, for use-cases like staking, without leaving holders wallet, using roles.
  */
-abstract contract ERC721RoleBasedLockableExtension is
-    IERC721RoleBasedLockableExtension,
-    ERC721LockableExtension,
+abstract contract ERC721ARoleBasedLockableExtension is
+    IERC721ARoleBasedLockableExtension,
+    ERC721ALockableExtension,
     AccessControl
 {
     using BitMaps for BitMaps.BitMap;
 
     bytes32 public constant LOCKER_ROLE = keccak256("LOCKER_ROLE");
 
-    function __ERC721RoleBasedLockableExtension_init()
+    function __ERC721ARoleBasedLockableExtension_init()
         internal
         onlyInitializing
     {
-        __ERC721RoleBasedLockableExtension_init_unchained();
+        __ERC721ARoleBasedLockableExtension_init_unchained();
     }
 
-    function __ERC721RoleBasedLockableExtension_init_unchained()
+    function __ERC721ARoleBasedLockableExtension_init_unchained()
         internal
         onlyInitializing
     {
-        _registerInterface(type(IERC721RoleBasedLockableExtension).interfaceId);
+        _registerInterface(
+            type(IERC721ARoleBasedLockableExtension).interfaceId
+        );
     }
 
     // ADMIN
@@ -50,7 +52,10 @@ abstract contract ERC721RoleBasedLockableExtension is
      * This mechanism prevents them from being transferred, yet still will show correct owner.
      */
     function lock(uint256[] calldata tokenIds) public virtual nonReentrant {
-        require(hasRole(LOCKER_ROLE, msg.sender), "ERC721/NOT_LOCKER_ROLE");
+        require(
+            hasRole(LOCKER_ROLE, msg.sender),
+            "STAKABLE_ERC721/NOT_LOCKER_ROLE"
+        );
 
         for (uint256 i = 0; i < tokenIds.length; i++) {
             _lock(tokenIds[i]);
@@ -61,7 +66,10 @@ abstract contract ERC721RoleBasedLockableExtension is
      * Unlocks locked token(s) to be able to transfer.
      */
     function unlock(uint256[] calldata tokenIds) public virtual nonReentrant {
-        require(hasRole(LOCKER_ROLE, msg.sender), "ERC721/NOT_LOCKER_ROLE");
+        require(
+            hasRole(LOCKER_ROLE, msg.sender),
+            "STAKABLE_ERC721/NOT_LOCKER_ROLE"
+        );
 
         for (uint256 i = 0; i < tokenIds.length; i++) {
             _unlock(tokenIds[i]);
@@ -83,7 +91,7 @@ abstract contract ERC721RoleBasedLockableExtension is
         public
         view
         virtual
-        override(AccessControl, ERC721LockableExtension)
+        override(AccessControl, ERC721ALockableExtension)
         returns (bool)
     {
         return ERC165Storage.supportsInterface(interfaceId);

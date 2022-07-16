@@ -2,7 +2,6 @@
 import { expect } from "chai";
 import { utils } from "ethers";
 import hre, { ethers } from "hardhat";
-import web3 from "web3";
 import {
   ERC721FullFeaturedCollection,
   ERC721FullFeaturedCollection__factory,
@@ -24,9 +23,9 @@ const deployCollection = async function (
     placeholderURI: "ipfs://yyyyy",
     tokenURIPrefix: "ipfs://yyyyy",
     maxSupply: 8000,
-    preSalePrice: web3.utils.toWei("0.06"),
+    preSalePrice: utils.parseEther("0.06"),
     preSaleMaxMintPerWallet: 2,
-    publicSalePrice: web3.utils.toWei("0.08"),
+    publicSalePrice: utils.parseEther("0.08"),
     publicSaleMaxMintPerTx: 10,
     defaultRoyaltyAddress: "0x0000000000000000000000000000000000000000",
     defaultRoyaltyBps: 250,
@@ -53,9 +52,9 @@ describe("ERC721FullFeaturedCollection", function () {
           placeholderURI: "ipfs://bbbbbb",
           tokenURIPrefix: "ipfs://ccccccc",
           maxSupply: 5000,
-          preSalePrice: web3.utils.toWei("1"),
+          preSalePrice: utils.parseEther("1"),
           preSaleMaxMintPerWallet: 2,
-          publicSalePrice: web3.utils.toWei("2"),
+          publicSalePrice: utils.parseEther("2"),
           publicSaleMaxMintPerTx: 10,
           defaultRoyaltyAddress: "0x0000000000000000000000000000000000000000",
           defaultRoyaltyBps: 250,
@@ -134,9 +133,9 @@ describe("ERC721FullFeaturedCollection", function () {
       placeholderURI: "ipfs://yyyyy",
       tokenURIPrefix: "ipfs://yyyyy",
       maxSupply: 8000,
-      preSalePrice: web3.utils.toWei("0.06"),
+      preSalePrice: utils.parseEther("0.06"),
       preSaleMaxMintPerWallet: 2,
-      publicSalePrice: web3.utils.toWei("0.08"),
+      publicSalePrice: utils.parseEther("0.08"),
       publicSaleMaxMintPerTx: 10,
       defaultRoyaltyAddress: "0x0000000000000000000000000000000000000000",
       defaultRoyaltyBps: 250,
@@ -163,9 +162,9 @@ describe("ERC721FullFeaturedCollection", function () {
       placeholderURI: "ipfs://yyyyy",
       tokenURIPrefix: "ipfs://yyyyy",
       maxSupply: 8000,
-      preSalePrice: web3.utils.toWei("0.06"),
+      preSalePrice: utils.parseEther("0.06"),
       preSaleMaxMintPerWallet: 2,
-      publicSalePrice: web3.utils.toWei("0.08"),
+      publicSalePrice: utils.parseEther("0.08"),
       publicSaleMaxMintPerTx: 10,
       defaultRoyaltyAddress: "0x0000000000000000000000000000000000000000",
       defaultRoyaltyBps: 250,
@@ -188,5 +187,46 @@ describe("ERC721FullFeaturedCollection", function () {
 
     // EIP2981 Royalty
     expect(await collection.supportsInterface("0x2a55205a")).to.be.equal(true);
+  });
+
+  it("should prevent transfer when token is locked", async function () {
+    const { deployer, userA, userB, userC } = await setupTest();
+
+    const collection = await deployCollection();
+
+    await collection
+      .connect(deployer.signer)
+      .grantRole(
+        utils.keccak256(Buffer.from("LOCKER_ROLE")),
+        deployer.signer.address
+      );
+
+    await collection
+      .connect(deployer.signer)
+      .mintByOwner(userA.signer.address, 1);
+
+    expect(await collection.ownerOf(0)).to.be.equal(userA.signer.address);
+
+    await collection
+      .connect(userA.signer)
+      .transferFrom(userA.signer.address, userC.signer.address, 0);
+
+    expect(await collection.ownerOf(0)).to.be.equal(userC.signer.address);
+
+    await collection.connect(deployer.signer).lock([0]);
+
+    await expect(
+      collection
+        .connect(userC.signer)
+        .transferFrom(userC.signer.address, userB.signer.address, 0)
+    ).to.be.revertedWith("ERC721/TOKEN_LOCKED");
+
+    await collection.connect(deployer.signer).unlock([0]);
+
+    await collection
+      .connect(userC.signer)
+      .transferFrom(userC.signer.address, userB.signer.address, 0);
+
+    expect(await collection.ownerOf(0)).to.be.equal(userB.signer.address);
   });
 });
