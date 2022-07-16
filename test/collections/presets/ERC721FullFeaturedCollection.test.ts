@@ -203,30 +203,30 @@ describe("ERC721FullFeaturedCollection", function () {
 
     await collection
       .connect(deployer.signer)
-      .mintByOwner(userA.signer.address, 1);
+      .mintByOwner(userA.signer.address, 4);
 
-    expect(await collection.ownerOf(0)).to.be.equal(userA.signer.address);
+    expect(await collection.ownerOf(2)).to.be.equal(userA.signer.address);
 
     await collection
       .connect(userA.signer)
-      .transferFrom(userA.signer.address, userC.signer.address, 0);
+      .transferFrom(userA.signer.address, userC.signer.address, 2);
 
-    expect(await collection.ownerOf(0)).to.be.equal(userC.signer.address);
+    expect(await collection.ownerOf(2)).to.be.equal(userC.signer.address);
 
-    await collection.connect(deployer.signer).lock([0]);
+    await collection.connect(deployer.signer).lock([2, 1]);
 
     await expect(
       collection
         .connect(userC.signer)
-        .transferFrom(userC.signer.address, userB.signer.address, 0)
+        .transferFrom(userC.signer.address, userB.signer.address, 2)
     ).to.be.revertedWith("ERC721/TOKEN_LOCKED");
 
-    await collection.connect(deployer.signer).unlock([0]);
+    await collection.connect(deployer.signer).unlock([2]);
 
     await collection
       .connect(userC.signer)
-      .transferFrom(userC.signer.address, userB.signer.address, 0);
+      .transferFrom(userC.signer.address, userB.signer.address, 2);
 
-    expect(await collection.ownerOf(0)).to.be.equal(userB.signer.address);
+    expect(await collection.ownerOf(2)).to.be.equal(userB.signer.address);
   });
 });
