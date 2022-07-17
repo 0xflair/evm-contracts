@@ -82,7 +82,7 @@ abstract contract ERC721ALockableExtension is
         require(
             // We are not checking the quantity because it is only used during mint where users cannot stake/unstake.
             !lockedTokens.get(startTokenId),
-            "STAKABLE_ERC721/TOKEN_STAKED"
+            "ERC721/TOKEN_LOCKED"
         );
         super._beforeTokenTransfers(from, to, startTokenId, quantity);
     }
