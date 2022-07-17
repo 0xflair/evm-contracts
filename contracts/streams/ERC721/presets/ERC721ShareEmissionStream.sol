@@ -69,15 +69,19 @@ contract ERC721ShareEmissionStream is
         __ERC721ShareSplitExtension_init(config.tokenIds, config.shares);
     }
 
-    function _beforeClaim(uint256 ticketTokenId, address claimToken)
+    function _beforeClaim(
+        uint256 ticketTokenId_,
+        address claimToken_,
+        address owner_
+    )
         internal
-        view
         override(ERC721MultiTokenStream, ERC721EmissionReleaseExtension)
     {
         return
             ERC721EmissionReleaseExtension._beforeClaim(
-                ticketTokenId,
-                claimToken
+                ticketTokenId_,
+                claimToken_,
+                owner_
             );
     }
 }

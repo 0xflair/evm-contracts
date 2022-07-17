@@ -68,15 +68,19 @@ contract ERC721EqualEmissionStream is
         __ERC721EqualSplitExtension_init(config.totalTickets);
     }
 
-    function _beforeClaim(uint256 ticketTokenId, address claimToken)
+    function _beforeClaim(
+        uint256 ticketTokenId_,
+        address claimToken_,
+        address owner_
+    )
         internal
-        view
         override(ERC721MultiTokenStream, ERC721EmissionReleaseExtension)
     {
         return
             ERC721EmissionReleaseExtension._beforeClaim(
-                ticketTokenId,
-                claimToken
+                ticketTokenId_,
+                claimToken_,
+                owner_
             );
     }
 }
