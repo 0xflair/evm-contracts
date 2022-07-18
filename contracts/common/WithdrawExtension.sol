@@ -116,6 +116,16 @@ abstract contract WithdrawExtension is
         }
     }
 
+    function withdrawByAmount(uint256 amount) {
+        require(withdrawRecipient != address(0), "WITHDRAW/NO_RECIPIENT");
+        require(!amount, "WITHDRAW/NO_AMOUNT");
+
+        uint256 balance = address(this).balance;
+        require(amount =< balance, "WITHDRAW/NOT_SUFFICIENT_BALANCE");
+
+        payable(withdrawRecipient).transfer(amount);
+    }
+
     function revokeEmergencyPower() external onlyOwner {
         emergencyPowerRevoked = true;
         emit EmergencyPowerRevoked();
