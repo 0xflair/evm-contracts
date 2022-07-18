@@ -32,6 +32,8 @@ const deployStream = async function (args?: {
         // Share split extension
         tokenIds: [1, 2, 3, 4],
         shares: [2500, 1000, 2500, 4000],
+        // Lockable claim extension
+        claimLockedUntil: 0,
         ...(args || {}),
       },
     ]
