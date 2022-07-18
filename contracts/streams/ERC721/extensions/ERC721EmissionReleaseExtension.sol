@@ -139,7 +139,7 @@ abstract contract ERC721EmissionReleaseExtension is
 
     /* INTERNAL */
 
-    function _totalReleasedAmount(
+    function _totalStreamReleasedAmount(
         uint256 streamTotalSupply_,
         uint256 ticketTokenId_,
         address claimToken_

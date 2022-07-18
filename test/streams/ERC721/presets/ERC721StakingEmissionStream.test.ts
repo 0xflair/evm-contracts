@@ -30,13 +30,16 @@ const deployStream = async function (args?: {
         // Base
         ticketToken: ticketToken.address,
         lockedUntilTimestamp: nowMinusOneDayUnix,
-        // Staking claim extension
-        minLockTime: 3600, // 1 hour
+        // Locked staking extension
+        minStakingLockTime: 3600, // 1 hour
         // Emission release extension
         emissionRate: utils.parseEther("2"),
         emissionTimeUnit: 3600, // 1 hour
         emissionStart: nowMinusOneDayUnix,
         emissionEnd: nowPlusFiveDaysUnix,
+        // Lockable claim extension
+        claimLockedUntil: 0,
+
         ...(args || {}),
       },
     ]
@@ -45,11 +48,11 @@ const deployStream = async function (args?: {
 
 describe("ERC721StakingEmissionStream", function () {
   describe("Interfaces", function () {
-    it("supports IERC721StakingClaimExtension", async function () {
+    it("supports IERC721LockedStakingExtension", async function () {
       await setupTest();
       const stream = await deployStream();
 
-      expect(await stream.supportsInterface("0x2ad0d88c")).to.equal(true);
+      expect(await stream.supportsInterface("0x7f4fdea8")).to.equal(true);
     });
 
     it("supports IERC721EmissionReleaseExtension", async function () {
@@ -72,12 +75,14 @@ describe("ERC721StakingEmissionStream", function () {
           ticketToken: userA.TestERC721.address,
           lockedUntilTimestamp: 0,
           // Staking claim extension
-          minLockTime: 3600, // 1 hour
+          minStakingLockTime: 3600, // 1 hour
           // Emission release extension
           emissionRate: utils.parseEther("2"),
           emissionTimeUnit: 3600, // 1 hour
           emissionStart: 0,
           emissionEnd: Math.floor(+new Date() / 1000 + 100000000),
+          // Lockable claim extension
+          claimLockedUntil: 0,
         },
         userB.signer.address,
       ]);
@@ -193,7 +198,9 @@ describe("ERC721StakingEmissionStream", function () {
 
       await increaseTime(1 * 24 * 60 * 60); // 1 day
 
-      expect(await stream.connect(userB.signer).stakingTime(2)).to.be.equal(0);
+      expect(
+        await stream.connect(userB.signer)["totalStakedDuration(uint256)"](2)
+      ).to.be.equal(0);
       expect(
         await stream.connect(userB.signer)["streamClaimableAmount(uint256)"](2)
       ).to.be.equal(0);
@@ -206,7 +213,9 @@ describe("ERC721StakingEmissionStream", function () {
         await stream.connect(userB.signer)["streamClaimableAmount(uint256)"](2)
       ).to.be.equal(utils.parseEther("6"));
 
-      expect(await stream.connect(userB.signer).stakingTime(2)).to.be.gt(10000);
+      expect(
+        await stream.connect(userB.signer)["totalStakedDuration(uint256)"](2)
+      ).to.be.gt(10000);
 
       await expect(
         await stream.connect(userB.signer)["claim(uint256)"](2)
@@ -214,8 +223,6 @@ describe("ERC721StakingEmissionStream", function () {
         [stream, userB.signer],
         [utils.parseEther("-6"), utils.parseEther("6")]
       );
-
-      expect(await stream.connect(userB.signer).stakingTime(2)).to.be.equal(0);
     });
 
     it("should claim only for duration of emission not longer", async function () {
@@ -244,7 +251,9 @@ describe("ERC721StakingEmissionStream", function () {
 
       await increaseTime(1 * 24 * 60 * 60); // 1 day
 
-      expect(await stream.connect(userB.signer).stakingTime(2)).to.be.equal(0);
+      expect(
+        await stream.connect(userB.signer)["totalStakedDuration(uint256)"](2)
+      ).to.be.equal(0);
       expect(
         await stream.connect(userB.signer)["streamClaimableAmount(uint256)"](2)
       ).to.be.equal(0);
@@ -257,7 +266,9 @@ describe("ERC721StakingEmissionStream", function () {
         await stream.connect(userB.signer)["streamClaimableAmount(uint256)"](2)
       ).to.be.equal(utils.parseEther("190"));
 
-      expect(await stream.connect(userB.signer).stakingTime(2)).to.be.gt(10000);
+      expect(
+        await stream.connect(userB.signer)["totalStakedDuration(uint256)"](2)
+      ).to.be.gt(10000);
 
       await expect(
         await stream.connect(userB.signer)["claim(uint256)"](2)
@@ -265,8 +276,6 @@ describe("ERC721StakingEmissionStream", function () {
         [stream, userB.signer],
         [utils.parseEther("-190"), utils.parseEther("190")]
       );
-
-      expect(await stream.connect(userB.signer).stakingTime(2)).to.be.equal(0);
     });
 
     it("should not claim for un-staked nfts", async function () {
@@ -295,21 +304,25 @@ describe("ERC721StakingEmissionStream", function () {
 
       await increaseTime(1 * 24 * 60 * 60); // 1 day
 
-      expect(await stream.connect(userB.signer).stakingTime(2)).to.be.equal(0);
+      expect(
+        await stream.connect(userB.signer)["totalStakedDuration(uint256)"](2)
+      ).to.be.equal(0);
       expect(
         await stream.connect(userB.signer)["streamClaimableAmount(uint256)"](2)
       ).to.be.equal(0);
 
       await increaseTime(3 * 60 * 60); // 3 hours
 
-      expect(await stream.connect(userB.signer).stakingTime(2)).to.be.equal(0);
+      expect(
+        await stream.connect(userB.signer)["totalStakedDuration(uint256)"](2)
+      ).to.be.equal(0);
 
       await expect(
         stream.connect(userB.signer)["claim(uint256)"](2)
-      ).to.be.revertedWith("STREAM/NOT_STAKED");
+      ).to.be.revertedWith("STREAM/NOTHING_TO_CLAIM");
     });
 
-    it("should not claim when already claimed", async function () {
+    it("should not claim when already claimed recently", async function () {
       const { deployer, userA, userB } = await setupTest();
 
       const lockableCollection = await deployCollection("normal");
@@ -348,10 +361,10 @@ describe("ERC721StakingEmissionStream", function () {
 
       await expect(
         stream.connect(userB.signer)["claim(uint256)"](2)
-      ).to.be.revertedWith("STREAM/NOT_STAKED");
+      ).to.be.revertedWith("STREAM/TOO_EARLY");
     });
 
-    it("should claim multiple times for a single nft", async function () {
+    it("should stake and claim multiple times for a single nft", async function () {
       const { deployer, userA, userB } = await setupTest();
 
       const lockableCollection = await deployCollection("normal");
@@ -377,7 +390,9 @@ describe("ERC721StakingEmissionStream", function () {
 
       await increaseTime(1 * 24 * 60 * 60); // 1 day
 
-      expect(await stream.connect(userB.signer).stakingTime(2)).to.be.equal(0);
+      expect(
+        await stream.connect(userB.signer)["totalStakedDuration(uint256)"](2)
+      ).to.be.equal(0);
       expect(
         await stream.connect(userB.signer)["streamClaimableAmount(uint256)"](2)
       ).to.be.equal(0);
@@ -390,7 +405,9 @@ describe("ERC721StakingEmissionStream", function () {
         await stream.connect(userB.signer)["streamClaimableAmount(uint256)"](2)
       ).to.be.equal(utils.parseEther("6"));
 
-      expect(await stream.connect(userB.signer).stakingTime(2)).to.be.gt(10000);
+      expect(
+        await stream.connect(userB.signer)["totalStakedDuration(uint256)"](2)
+      ).to.be.gt(10000);
 
       await expect(
         await stream.connect(userB.signer)["claim(uint256)"](2)
@@ -399,9 +416,16 @@ describe("ERC721StakingEmissionStream", function () {
         [utils.parseEther("-6"), utils.parseEther("6")]
       );
 
-      expect(await stream.connect(userB.signer).stakingTime(2)).to.be.equal(0);
+      await stream.connect(userB.signer)["unstake(uint256)"](2);
+      const prevTotalDuration = await stream
+        .connect(userB.signer)
+        ["totalStakedDuration(uint256)"](2);
 
       await increaseTime(10 * 60 * 60); // 10 hours
+
+      expect(
+        await stream.connect(userB.signer)["totalStakedDuration(uint256)"](2)
+      ).to.be.equal(prevTotalDuration);
 
       await stream.connect(userB.signer)["stake(uint256)"](2);
 
@@ -411,7 +435,9 @@ describe("ERC721StakingEmissionStream", function () {
         await stream.connect(userB.signer)["streamClaimableAmount(uint256)"](2)
       ).to.be.equal(utils.parseEther("8"));
 
-      expect(await stream.connect(userB.signer).stakingTime(2)).to.be.gt(10000);
+      expect(
+        await stream.connect(userB.signer)["totalStakedDuration(uint256)"](2)
+      ).to.be.gt(prevTotalDuration);
 
       await expect(
         await stream.connect(userB.signer)["claim(uint256)"](2)
@@ -419,11 +445,9 @@ describe("ERC721StakingEmissionStream", function () {
         [stream, userB.signer],
         [utils.parseEther("-8"), utils.parseEther("8")]
       );
-
-      expect(await stream.connect(userB.signer).stakingTime(2)).to.be.equal(0);
     });
 
-    it("should fail to claim on behalf of current nft owner", async function () {
+    it("should claim on behalf of current nft owner", async function () {
       const { deployer, userA, userB, userC } = await setupTest();
 
       const lockableCollection = await deployCollection("normal");
@@ -453,8 +477,65 @@ describe("ERC721StakingEmissionStream", function () {
 
       await increaseTime(3 * 60 * 60); // 3 hours
 
+      await expect(async () =>
+        stream.connect(userC.signer)["claim(uint256)"](2)
+      ).to.changeEtherBalances(
+        [stream, userB.signer],
+        [utils.parseEther("-6"), utils.parseEther("6")]
+      );
+    });
+
+    it("should fail to unstake on behalf of current nft owner", async function () {
+      const { deployer, userB, userC } = await setupTest();
+
+      const lockableCollection = await deployCollection("normal");
+      const stream = await deployStream({
+        ticketToken: lockableCollection.address,
+      });
+
+      await lockableCollection
+        .connect(deployer.signer)
+        .grantRole(
+          utils.keccak256(utils.toUtf8Bytes("LOCKER_ROLE")),
+          stream.address
+        );
+
+      await lockableCollection
+        .connect(deployer.signer)
+        .mintByOwner(userB.signer.address, 5);
+
+      await increaseTime(1 * 24 * 60 * 60); // 1 day
+
+      await stream.connect(userB.signer)["stake(uint256)"](2);
+
+      await increaseTime(3 * 60 * 60); // 3 hours
+
       await expect(
-        stream.connect(userC.signer)["claim(uint256,address)"](2, ZERO_ADDRESS)
+        stream.connect(userC.signer)["unstake(uint256)"](2)
+      ).to.be.revertedWith("STREAM/NOT_TOKEN_OWNER");
+    });
+
+    it("should fail to stake on behalf of current nft owner", async function () {
+      const { deployer, userB, userC } = await setupTest();
+
+      const lockableCollection = await deployCollection("normal");
+      const stream = await deployStream({
+        ticketToken: lockableCollection.address,
+      });
+
+      await lockableCollection
+        .connect(deployer.signer)
+        .grantRole(
+          utils.keccak256(utils.toUtf8Bytes("LOCKER_ROLE")),
+          stream.address
+        );
+
+      await lockableCollection
+        .connect(deployer.signer)
+        .mintByOwner(userB.signer.address, 5);
+
+      await expect(
+        stream.connect(userC.signer)["stake(uint256)"](2)
       ).to.be.revertedWith("STREAM/NOT_TOKEN_OWNER");
     });
   });
@@ -513,7 +594,9 @@ describe("ERC721StakingEmissionStream", function () {
 
       await increaseTime(1 * 24 * 60 * 60); // 1 day
 
-      expect(await stream.connect(userB.signer).stakingTime(2)).to.be.equal(0);
+      expect(
+        await stream.connect(userB.signer)["totalStakedDuration(uint256)"](2)
+      ).to.be.equal(0);
       expect(
         await stream
           .connect(userB.signer)
@@ -530,7 +613,9 @@ describe("ERC721StakingEmissionStream", function () {
           ["streamClaimableAmount(uint256,address)"](2, userA.TestERC20.address)
       ).to.be.equal(utils.parseEther("6"));
 
-      expect(await stream.connect(userB.signer).stakingTime(2)).to.be.gt(10000);
+      expect(
+        await stream.connect(userB.signer)["totalStakedDuration(uint256)"](2)
+      ).to.be.gt(10000);
 
       await expect(async () =>
         stream
@@ -541,8 +626,6 @@ describe("ERC721StakingEmissionStream", function () {
         [stream, userB.signer],
         [utils.parseEther("-6"), utils.parseEther("6")]
       );
-
-      expect(await stream.connect(userB.signer).stakingTime(2)).to.be.equal(0);
     });
 
     it("should claim only for duration of emission not longer", async function () {
@@ -569,7 +652,9 @@ describe("ERC721StakingEmissionStream", function () {
 
       await increaseTime(1 * 24 * 60 * 60); // 1 day
 
-      expect(await stream.connect(userB.signer).stakingTime(2)).to.be.equal(0);
+      expect(
+        await stream.connect(userB.signer)["totalStakedDuration(uint256)"](2)
+      ).to.be.equal(0);
       expect(
         await stream
           .connect(userB.signer)
@@ -586,7 +671,9 @@ describe("ERC721StakingEmissionStream", function () {
           ["streamClaimableAmount(uint256,address)"](2, userA.TestERC20.address)
       ).to.be.equal(utils.parseEther("190"));
 
-      expect(await stream.connect(userB.signer).stakingTime(2)).to.be.gt(10000);
+      expect(
+        await stream.connect(userB.signer)["totalStakedDuration(uint256)"](2)
+      ).to.be.gt(10000);
 
       await expect(async () =>
         stream
@@ -597,8 +684,6 @@ describe("ERC721StakingEmissionStream", function () {
         [stream, userB.signer],
         [utils.parseEther("-190"), utils.parseEther("190")]
       );
-
-      expect(await stream.connect(userB.signer).stakingTime(2)).to.be.equal(0);
     });
 
     it("should not claim for un-staked nfts", async function () {
@@ -625,7 +710,9 @@ describe("ERC721StakingEmissionStream", function () {
 
       await increaseTime(1 * 24 * 60 * 60); // 1 day
 
-      expect(await stream.connect(userB.signer).stakingTime(2)).to.be.equal(0);
+      expect(
+        await stream.connect(userB.signer)["totalStakedDuration(uint256)"](2)
+      ).to.be.equal(0);
       expect(
         await stream
           .connect(userB.signer)
@@ -634,16 +721,18 @@ describe("ERC721StakingEmissionStream", function () {
 
       await increaseTime(3 * 60 * 60); // 3 hours
 
-      expect(await stream.connect(userB.signer).stakingTime(2)).to.be.equal(0);
+      expect(
+        await stream.connect(userB.signer)["totalStakedDuration(uint256)"](2)
+      ).to.be.equal(0);
 
       await expect(
         stream
           .connect(userB.signer)
           ["claim(uint256,address)"](2, userA.TestERC20.address)
-      ).to.be.revertedWith("STREAM/NOT_STAKED");
+      ).to.be.revertedWith("STREAM/NOTHING_TO_CLAIM");
     });
 
-    it("should not claim when already claimed", async function () {
+    it("should not claim when already claimed recently", async function () {
       const { deployer, userA, userB } = await setupTest();
 
       const lockableCollection = await deployCollection("normal");
@@ -685,10 +774,10 @@ describe("ERC721StakingEmissionStream", function () {
         stream
           .connect(userB.signer)
           ["claim(uint256,address)"](2, userA.TestERC20.address)
-      ).to.be.revertedWith("STREAM/NOT_STAKED");
+      ).to.be.revertedWith("STREAM/TOO_EARLY");
     });
 
-    it("should claim multiple times for a single nft", async function () {
+    it("should stake and claim multiple times for a single nft", async function () {
       const { deployer, userA, userB } = await setupTest();
 
       const lockableCollection = await deployCollection("normal");
@@ -712,7 +801,9 @@ describe("ERC721StakingEmissionStream", function () {
 
       await increaseTime(1 * 24 * 60 * 60); // 1 day
 
-      expect(await stream.connect(userB.signer).stakingTime(2)).to.be.equal(0);
+      expect(
+        await stream.connect(userB.signer)["totalStakedDuration(uint256)"](2)
+      ).to.be.equal(0);
       expect(
         await stream
           .connect(userB.signer)
@@ -729,7 +820,9 @@ describe("ERC721StakingEmissionStream", function () {
           ["streamClaimableAmount(uint256,address)"](2, userA.TestERC20.address)
       ).to.be.equal(utils.parseEther("6"));
 
-      expect(await stream.connect(userB.signer).stakingTime(2)).to.be.gt(10000);
+      expect(
+        await stream.connect(userB.signer)["totalStakedDuration(uint256)"](2)
+      ).to.be.gt(10000);
 
       await expect(async () =>
         stream
@@ -741,9 +834,16 @@ describe("ERC721StakingEmissionStream", function () {
         [utils.parseEther("-6"), utils.parseEther("6")]
       );
 
-      expect(await stream.connect(userB.signer).stakingTime(2)).to.be.equal(0);
+      await stream.connect(userB.signer)["unstake(uint256)"](2);
+      const prevTotalDuration = await stream
+        .connect(userB.signer)
+        ["totalStakedDuration(uint256)"](2);
 
       await increaseTime(10 * 60 * 60); // 10 hours
+
+      expect(
+        await stream.connect(userB.signer)["totalStakedDuration(uint256)"](2)
+      ).to.be.equal(prevTotalDuration);
 
       await stream.connect(userB.signer)["stake(uint256)"](2);
 
@@ -755,7 +855,9 @@ describe("ERC721StakingEmissionStream", function () {
           ["streamClaimableAmount(uint256,address)"](2, userA.TestERC20.address)
       ).to.be.equal(utils.parseEther("8"));
 
-      expect(await stream.connect(userB.signer).stakingTime(2)).to.be.gt(10000);
+      expect(
+        await stream.connect(userB.signer)["totalStakedDuration(uint256)"](2)
+      ).to.be.gt(prevTotalDuration);
 
       await expect(async () =>
         stream
@@ -766,11 +868,9 @@ describe("ERC721StakingEmissionStream", function () {
         [stream, userB.signer],
         [utils.parseEther("-8"), utils.parseEther("8")]
       );
-
-      expect(await stream.connect(userB.signer).stakingTime(2)).to.be.equal(0);
     });
 
-    it("should fail to claim on behalf of current nft owner", async function () {
+    it("should claim on behalf of current nft owner", async function () {
       const { deployer, userA, userB, userC } = await setupTest();
 
       const lockableCollection = await deployCollection("normal");
@@ -798,10 +898,68 @@ describe("ERC721StakingEmissionStream", function () {
 
       await increaseTime(3 * 60 * 60); // 3 hours
 
-      await expect(
+      await expect(async () =>
         stream
           .connect(userC.signer)
           ["claim(uint256,address)"](2, userA.TestERC20.address)
+      ).to.changeTokenBalances(
+        userA.TestERC20,
+        [stream, userB.signer],
+        [utils.parseEther("-6"), utils.parseEther("6")]
+      );
+    });
+
+    it("should fail to unstake on behalf of current nft owner", async function () {
+      const { deployer, userA, userB, userC } = await setupTest();
+
+      const lockableCollection = await deployCollection("normal");
+      const stream = await deployStream({
+        ticketToken: lockableCollection.address,
+      });
+
+      await lockableCollection
+        .connect(deployer.signer)
+        .grantRole(
+          utils.keccak256(utils.toUtf8Bytes("LOCKER_ROLE")),
+          stream.address
+        );
+
+      await lockableCollection
+        .connect(deployer.signer)
+        .mintByOwner(userB.signer.address, 5);
+
+      await increaseTime(1 * 24 * 60 * 60); // 1 day
+
+      await stream.connect(userB.signer)["stake(uint256)"](2);
+
+      await increaseTime(3 * 60 * 60); // 3 hours
+
+      await expect(
+        stream.connect(userC.signer)["unstake(uint256)"](2)
+      ).to.be.revertedWith("STREAM/NOT_TOKEN_OWNER");
+    });
+
+    it("should fail to stake on behalf of current nft owner", async function () {
+      const { deployer, userB, userC } = await setupTest();
+
+      const lockableCollection = await deployCollection("normal");
+      const stream = await deployStream({
+        ticketToken: lockableCollection.address,
+      });
+
+      await lockableCollection
+        .connect(deployer.signer)
+        .grantRole(
+          utils.keccak256(utils.toUtf8Bytes("LOCKER_ROLE")),
+          stream.address
+        );
+
+      await lockableCollection
+        .connect(deployer.signer)
+        .mintByOwner(userB.signer.address, 5);
+
+      await expect(
+        stream.connect(userC.signer)["stake(uint256)"](2)
       ).to.be.revertedWith("STREAM/NOT_TOKEN_OWNER");
     });
   });

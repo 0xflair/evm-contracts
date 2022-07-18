@@ -344,8 +344,8 @@ abstract contract ERC721MultiTokenStream is
         virtual
         returns (uint256)
     {
-        uint256 totalReleased = _totalTokenShare(
-            _totalReleasedAmount(
+        uint256 totalReleased = _totalTokenReleasedAmount(
+            _totalStreamReleasedAmount(
                 streamTotalSupply(claimToken),
                 ticketTokenId,
                 claimToken
@@ -359,13 +359,13 @@ abstract contract ERC721MultiTokenStream is
             entitlements[ticketTokenId][claimToken].totalClaimed;
     }
 
-    function _totalReleasedAmount(
+    function _totalStreamReleasedAmount(
         uint256 streamTotalSupply_,
         uint256 ticketTokenId_,
         address claimToken_
     ) internal view virtual returns (uint256);
 
-    function _totalTokenShare(
+    function _totalTokenReleasedAmount(
         uint256 totalReleasedAmount_,
         uint256 ticketTokenId_,
         address claimToken_

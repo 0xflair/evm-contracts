@@ -13,7 +13,8 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "../../../common/EmergencyOwnerWithdrawExtension.sol";
 import "../extensions/ERC721EmissionReleaseExtension.sol";
-import "../extensions/ERC721StakingClaimExtension.sol";
+import "../extensions/ERC721LockedStakingExtension.sol";
+import "../extensions/ERC721LockableClaimExtension.sol";
 
 /**
  * @author Flair (https://flair.finance)
@@ -21,9 +22,10 @@ import "../extensions/ERC721StakingClaimExtension.sol";
 contract ERC721StakingEmissionStream is
     Initializable,
     Ownable,
+    EmergencyOwnerWithdrawExtension,
     ERC721EmissionReleaseExtension,
-    ERC721StakingClaimExtension,
-    EmergencyOwnerWithdrawExtension
+    ERC721LockedStakingExtension,
+    ERC721LockableClaimExtension
 {
     using Address for address;
     using Address for address payable;
@@ -36,13 +38,15 @@ contract ERC721StakingEmissionStream is
         // Base
         address ticketToken;
         uint64 lockedUntilTimestamp;
-        // Staking claim extension
-        uint64 minLockTime;
+        // Locked staking extension
+        uint64 minStakingLockTime; // in seconds. Minimum time the NFT must stay locked before unstaking.
         // Emission release extension
         uint256 emissionRate;
         uint64 emissionTimeUnit;
         uint64 emissionStart;
         uint64 emissionEnd;
+        // Lockable claim extension
+        uint64 claimLockedUntil;
     }
 
     /* INTERNAL */
@@ -62,13 +66,56 @@ contract ERC721StakingEmissionStream is
             config.ticketToken,
             config.lockedUntilTimestamp
         );
-        __ERC721StakingClaimExtension_init(config.minLockTime);
+        __ERC721LockedStakingExtension_init(config.minStakingLockTime);
         __ERC721EmissionReleaseExtension_init(
             config.emissionRate,
             config.emissionTimeUnit,
             config.emissionStart,
             config.emissionEnd
         );
+        __ERC721LockableClaimExtension_init(config.claimLockedUntil);
+    }
+
+    function _totalStreamReleasedAmount(
+        uint256 streamTotalSupply_,
+        uint256 ticketTokenId_,
+        address claimToken_
+    )
+        internal
+        view
+        virtual
+        override(ERC721MultiTokenStream, ERC721EmissionReleaseExtension)
+        returns (uint256)
+    {
+        // Removing the logic from emission extension because it is irrevelant when staking.
+        return 0;
+    }
+
+    function _totalTokenReleasedAmount(
+        uint256 totalReleasedAmount_,
+        uint256 ticketTokenId_,
+        address claimToken_
+    ) internal view virtual override returns (uint256) {
+        totalReleasedAmount_;
+        ticketTokenId_;
+        claimToken_;
+
+        uint64 sumTotalOfStakingDurations = totalStakedDuration(ticketTokenId_);
+
+        return
+            emissionRate *
+            // Intentionally rounded down
+            (sumTotalOfStakingDurations / emissionTimeUnit);
+    }
+
+    function _stakingTimeLimit()
+        internal
+        view
+        virtual
+        override
+        returns (uint64)
+    {
+        return emissionEnd;
     }
 
     function _beforeClaim(
@@ -77,99 +124,41 @@ contract ERC721StakingEmissionStream is
         address owner_
     )
         internal
-        override(ERC721EmissionReleaseExtension, ERC721StakingClaimExtension)
+        override(
+            ERC721MultiTokenStream,
+            ERC721EmissionReleaseExtension,
+            ERC721LockableClaimExtension
+        )
     {
-        return
-            ERC721StakingClaimExtension._beforeClaim(
-                ticketTokenId_,
-                claimToken_,
-                owner_
-            );
-    }
-
-    function _afterClaimCalculation(
-        uint256 ticketTokenId_,
-        address claimToken_,
-        uint256 claimable_
-    )
-        internal
-        virtual
-        override(ERC721MultiTokenStream, ERC721StakingClaimExtension)
-    {
-        return
-            ERC721StakingClaimExtension._afterClaimCalculation(
-                ticketTokenId_,
-                claimToken_,
-                claimable_
-            );
-    }
-
-    function _totalTokenShare(
-        uint256 totalReleasedAmount_,
-        uint256 ticketTokenId_,
-        address claimToken_
-    ) internal view virtual override returns (uint256) {
-        totalReleasedAmount_;
-        ticketTokenId_;
-        claimToken_;
-        // For staking this is irrelevant, so we return 0.
-        return 0;
+        ERC721LockableClaimExtension._beforeClaim(
+            ticketTokenId_,
+            claimToken_,
+            owner_
+        );
+        ERC721EmissionReleaseExtension._beforeClaim(
+            ticketTokenId_,
+            claimToken_,
+            owner_
+        );
     }
 
     /* PUBLIC */
 
-    function streamClaimableAmount(uint256 ticketTokenId, address claimToken)
-        public
-        view
-        virtual
-        override
-        returns (uint256)
-    {
-        claimToken;
+    function stake(uint256 tokenId) public override {
+        require(
+            uint64(block.timestamp) >= emissionStart,
+            "STREAM/NOT_STARTED_YET"
+        );
 
-        if (stakingTime[ticketTokenId] == 0) {
-            return 0;
-        }
-
-        if (emissionStart > stakingTime[ticketTokenId]) {
-            return 0;
-        }
-
-        uint64 currentTime = uint64(block.timestamp);
-        uint256 endTime = currentTime > emissionEnd ? emissionEnd : currentTime;
-
-        if (stakingTime[ticketTokenId] > endTime) {
-            return 0;
-        }
-
-        return
-            emissionRate *
-            // Intentionally rounded down
-            ((endTime - stakingTime[ticketTokenId]) / emissionTimeUnit);
+        super.stake(tokenId);
     }
 
-    function rewardAmountUntil(uint256 ticketTokenId, uint64 calcUntil)
-        public
-        view
-        virtual
-        returns (uint256)
-    {
-        if (stakingTime[ticketTokenId] == 0) {
-            return 0;
-        }
+    function stake(uint256[] calldata tokenIds) public override {
+        require(
+            uint64(block.timestamp) >= emissionStart,
+            "STREAM/NOT_STARTED_YET"
+        );
 
-        if (emissionStart > stakingTime[ticketTokenId]) {
-            return 0;
-        }
-
-        uint256 endTime = calcUntil > emissionEnd ? emissionEnd : calcUntil;
-
-        if (stakingTime[ticketTokenId] > endTime) {
-            return 0;
-        }
-
-        return
-            ((endTime - stakingTime[ticketTokenId]) * emissionRate) /
-            emissionTimeUnit;
+        super.stake(tokenIds);
     }
 }
