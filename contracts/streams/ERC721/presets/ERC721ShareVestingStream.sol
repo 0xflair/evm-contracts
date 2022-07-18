@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-import "../../../common/EmergencyOwnerWithdrawExtension.sol";
+import "../../../common/WithdrawExtension.sol";
 import "../extensions/ERC721ShareSplitExtension.sol";
 import "../extensions/ERC721VestingReleaseExtension.sol";
 
@@ -20,7 +20,7 @@ contract ERC721ShareVestingStream is
     Ownable,
     ERC721VestingReleaseExtension,
     ERC721ShareSplitExtension,
-    EmergencyOwnerWithdrawExtension
+    WithdrawExtension
 {
     string public constant name = "ERC721 Share Vesting Stream";
 

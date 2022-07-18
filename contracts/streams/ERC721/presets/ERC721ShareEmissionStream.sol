@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-import "../../../common/EmergencyOwnerWithdrawExtension.sol";
+import "../../../common/WithdrawExtension.sol";
 import "../extensions/ERC721EmissionReleaseExtension.sol";
 import "../extensions/ERC721ShareSplitExtension.sol";
 
@@ -20,7 +20,7 @@ contract ERC721ShareEmissionStream is
     Ownable,
     ERC721EmissionReleaseExtension,
     ERC721ShareSplitExtension,
-    EmergencyOwnerWithdrawExtension
+    WithdrawExtension
 {
     using Address for address;
     using Address for address payable;

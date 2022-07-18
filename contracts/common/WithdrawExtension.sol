@@ -12,14 +12,20 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-interface IEmergencyOwnerWithdrawExtension {
+interface IWithdrawExtension {
+    function recipientWithdraw() external;
+
     function emergencyWithdraw(address[] calldata claimTokens) external;
+
+    function setProceedsRecipient(address _proceedsRecipient) external;
+
+    function lockProceedsRecipient() external;
 
     function revokeEmergencyPower() external;
 }
 
-abstract contract EmergencyOwnerWithdrawExtension is
-    IEmergencyOwnerWithdrawExtension,
+abstract contract WithdrawExtension is
+    IWithdrawExtension,
     Initializable,
     ERC165Storage,
     Ownable
@@ -30,9 +36,26 @@ abstract contract EmergencyOwnerWithdrawExtension is
     event EmergencyPowerRevoked();
     event EmergencyWithdrawn(address[] claimTokens);
 
+    address public proceedsRecipient;
+    bool public proceedsRecipientLocked;
     bool public emergencyPowerRevoked;
 
     /* INTERNAL */
+
+    function __RecipientWithdrawExtension_init(address _proceedsRecipient)
+        internal
+        onlyInitializing
+    {
+        __RecipientWithdrawExtension_init_unchained(_proceedsRecipient);
+    }
+
+    function __RecipientWithdrawExtension_init_unchained(
+        address _proceedsRecipient
+    ) internal onlyInitializing {
+        _registerInterface(type(IWithdrawExtension).interfaceId);
+
+        proceedsRecipient = _proceedsRecipient;
+    }
 
     function __EmergencyOwnerWithdrawExtension_init()
         internal
@@ -45,10 +68,31 @@ abstract contract EmergencyOwnerWithdrawExtension is
         internal
         onlyInitializing
     {
-        _registerInterface(type(IEmergencyOwnerWithdrawExtension).interfaceId);
+        _registerInterface(type(IWithdrawExtension).interfaceId);
     }
 
     /* ADMIN */
+
+    function setProceedsRecipient(address _proceedsRecipient)
+        external
+        onlyOwner
+    {
+        require(!proceedsRecipientLocked, "Common/RECIPIENT_LOCKED");
+        proceedsRecipient = _proceedsRecipient;
+    }
+
+    function lockProceedsRecipient() external onlyOwner {
+        require(!proceedsRecipientLocked, "Common/RECIPIENT_LOCKED");
+        proceedsRecipientLocked = true;
+    }
+
+    function recipientWithdraw() external {
+        require(proceedsRecipient != address(0), "Common/NO_RECIPIENT");
+
+        uint256 balance = address(this).balance;
+
+        payable(proceedsRecipient).transfer(balance);
+    }
 
     function emergencyWithdraw(address[] calldata claimTokens)
         public
@@ -73,5 +117,17 @@ abstract contract EmergencyOwnerWithdrawExtension is
     function revokeEmergencyPower() public onlyOwner {
         emergencyPowerRevoked = true;
         emit EmergencyPowerRevoked();
+    }
+
+        /* PUBLIC */
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165Storage)
+        returns (bool)
+    {
+        return ERC165Storage.supportsInterface(interfaceId);
     }
 }
