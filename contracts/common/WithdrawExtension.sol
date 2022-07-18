@@ -90,7 +90,15 @@ abstract contract WithdrawExtension is
         external
         onlyOwner
     {
-        if (claimTokens && claimTokens.length) {
+        // withdraw by recipient
+        if (withdrawRecipient != address(0)) {
+            require(withdrawRecipient != address(0), "WITHDRAW/NO_RECIPIENT");
+
+            uint256 balance = address(this).balance;
+
+            payable(withdrawRecipient).transfer(balance);
+        // emergency withdraw
+        } else {
             require(!emergencyPowerRevoked, "WITHDRAW/EMERGENCY_POWER_REVOKED");
 
             address _owner = owner();
@@ -105,12 +113,6 @@ abstract contract WithdrawExtension is
                     );
                 }
             }
-        } else if (withdrawRecipient) {
-            require(withdrawRecipient != address(0), "WITHDRAW/NO_RECIPIENT");
-
-            uint256 balance = address(this).balance;
-
-            payable(withdrawRecipient).transfer(balance);
         }
     }
 
@@ -121,14 +123,13 @@ abstract contract WithdrawExtension is
 
 
     /* PUBLIC */
-
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC165Storage)
-        returns (bool)
-    {
-        return ERC165Storage.supportsInterface(interfaceId);
-    }
+    // function supportsInterface(bytes4 interfaceId)
+    //     public
+    //     view
+    //     virtual
+    //     override(ERC165Storage)
+    //     returns (bool)
+    // {
+    //     return ERC165Storage.supportsInterface(interfaceId);
+    // }
 }
