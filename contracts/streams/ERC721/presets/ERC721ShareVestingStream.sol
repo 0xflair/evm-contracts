@@ -19,11 +19,10 @@ import "../extensions/ERC721LockableClaimExtension.sol";
 contract ERC721ShareVestingStream is
     Initializable,
     Ownable,
-    EmergencyOwnerWithdrawExtension,
     ERC721VestingReleaseExtension,
     ERC721ShareSplitExtension,
     ERC721LockableClaimExtension,
-    WithdrawExtension,
+    WithdrawExtension
 {
     string public constant name = "ERC721 Share Vesting Stream";
 

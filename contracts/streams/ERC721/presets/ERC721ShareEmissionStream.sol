@@ -19,11 +19,10 @@ import "../extensions/ERC721LockableClaimExtension.sol";
 contract ERC721ShareEmissionStream is
     Initializable,
     Ownable,
-    EmergencyOwnerWithdrawExtension,
     ERC721EmissionReleaseExtension,
     ERC721ShareSplitExtension,
     ERC721LockableClaimExtension,
-    WithdrawExtension,
+    WithdrawExtension
 {
     using Address for address;
     using Address for address payable;

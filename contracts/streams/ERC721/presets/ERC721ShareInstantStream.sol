@@ -19,11 +19,10 @@ import "../extensions/ERC721LockableClaimExtension.sol";
 contract ERC721ShareInstantStream is
     Initializable,
     Ownable,
-    EmergencyOwnerWithdrawExtension,
     ERC721InstantReleaseExtension,
     ERC721ShareSplitExtension,
     ERC721LockableClaimExtension,
-    WithdrawExtension,
+    WithdrawExtension
 {
     string public constant name = "ERC721 Share Instant Stream";
 
