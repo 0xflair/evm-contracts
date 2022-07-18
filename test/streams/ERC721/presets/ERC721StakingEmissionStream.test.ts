@@ -12,6 +12,7 @@ import { deployCollection } from "../../../collections/presets/ERC721FullFeature
 const deployStream = async function (args?: {
   ticketToken?: string;
   lockedUntilTimestamp?: BigNumberish;
+  minStakingLockTime?: BigNumberish;
 }): Promise<ERC721StakingEmissionStream> {
   const accounts = await getUnnamedAccounts();
   const nowMinusOneDayUnix =
@@ -125,6 +126,148 @@ describe("ERC721StakingEmissionStream", function () {
 
       expect(await stream.owner()).to.equal(deployer.signer.address);
       expect(await streamClone["owner()"]()).to.equal(userB.signer.address);
+    });
+  });
+
+  describe("Common", function () {
+    it("should fail to claim when claiming is locked", async function () {
+      const { deployer, userB } = await setupTest();
+
+      const lockableCollection = await deployCollection("normal");
+      const stream = await deployStream({
+        ticketToken: lockableCollection.address,
+        minStakingLockTime: 20 * 3600, // 20 hours
+      });
+
+      await lockableCollection
+        .connect(deployer.signer)
+        .grantRole(
+          utils.keccak256(utils.toUtf8Bytes("LOCKER_ROLE")),
+          stream.address
+        );
+
+      await lockableCollection
+        .connect(deployer.signer)
+        .mintByOwner(userB.signer.address, 5);
+
+      await increaseTime(1 * 24 * 60 * 60); // 1 day
+
+      await stream.connect(userB.signer)["stake(uint256)"](2);
+
+      await increaseTime(3 * 60 * 60); // 3 hours
+
+      await expect(
+        stream.connect(userB.signer)["unstake(uint256)"](2)
+      ).to.be.revertedWith("STREAM/NOT_LOCKED_ENOUGH");
+
+      expect(
+        await lockableCollection.connect(userB.signer).locked(2)
+      ).to.be.equal(true);
+
+      await increaseTime(30 * 60 * 60); // 30 hours
+
+      await stream.connect(userB.signer)["unstake(uint256)"](2);
+
+      expect(
+        await lockableCollection.connect(userB.signer).locked(2)
+      ).to.be.equal(false);
+    });
+
+    it("should fail to unstake sooner than min lock time", async function () {
+      const { deployer, userB } = await setupTest();
+
+      const lockableCollection = await deployCollection("normal");
+      const stream = await deployStream({
+        ticketToken: lockableCollection.address,
+        minStakingLockTime: 20 * 3600, // 20 hours
+      });
+
+      await lockableCollection
+        .connect(deployer.signer)
+        .grantRole(
+          utils.keccak256(utils.toUtf8Bytes("LOCKER_ROLE")),
+          stream.address
+        );
+
+      await lockableCollection
+        .connect(deployer.signer)
+        .mintByOwner(userB.signer.address, 5);
+
+      await increaseTime(1 * 24 * 60 * 60); // 1 day
+
+      await stream.connect(userB.signer)["stake(uint256)"](2);
+
+      await increaseTime(3 * 60 * 60); // 3 hours
+
+      await expect(
+        stream.connect(userB.signer)["unstake(uint256)"](2)
+      ).to.be.revertedWith("STREAM/NOT_LOCKED_ENOUGH");
+
+      expect(
+        await lockableCollection.connect(userB.signer).locked(2)
+      ).to.be.equal(true);
+
+      await increaseTime(30 * 60 * 60); // 30 hours
+
+      await stream.connect(userB.signer)["unstake(uint256)"](2);
+
+      expect(
+        await lockableCollection.connect(userB.signer).locked(2)
+      ).to.be.equal(false);
+    });
+
+    it("should fail to unstake on behalf of current nft owner", async function () {
+      const { deployer, userB, userC } = await setupTest();
+
+      const lockableCollection = await deployCollection("normal");
+      const stream = await deployStream({
+        ticketToken: lockableCollection.address,
+      });
+
+      await lockableCollection
+        .connect(deployer.signer)
+        .grantRole(
+          utils.keccak256(utils.toUtf8Bytes("LOCKER_ROLE")),
+          stream.address
+        );
+
+      await lockableCollection
+        .connect(deployer.signer)
+        .mintByOwner(userB.signer.address, 5);
+
+      await increaseTime(1 * 24 * 60 * 60); // 1 day
+
+      await stream.connect(userB.signer)["stake(uint256)"](2);
+
+      await increaseTime(3 * 60 * 60); // 3 hours
+
+      await expect(
+        stream.connect(userC.signer)["unstake(uint256)"](2)
+      ).to.be.revertedWith("STREAM/NOT_TOKEN_OWNER");
+    });
+
+    it("should fail to stake on behalf of current nft owner", async function () {
+      const { deployer, userB, userC } = await setupTest();
+
+      const lockableCollection = await deployCollection("normal");
+      const stream = await deployStream({
+        ticketToken: lockableCollection.address,
+      });
+
+      await lockableCollection
+        .connect(deployer.signer)
+        .grantRole(
+          utils.keccak256(utils.toUtf8Bytes("LOCKER_ROLE")),
+          stream.address
+        );
+
+      await lockableCollection
+        .connect(deployer.signer)
+        .mintByOwner(userB.signer.address, 5);
+
+      await expect(
+        stream.connect(userC.signer)["stake(uint256)"](2)
+      ).to.be.revertedWith("STREAM/NOT_TOKEN_OWNER");
     });
   });
 
@@ -483,60 +626,6 @@ describe("ERC721StakingEmissionStream", function () {
         [stream, userB.signer],
         [utils.parseEther("-6"), utils.parseEther("6")]
       );
-    });
-
-    it("should fail to unstake on behalf of current nft owner", async function () {
-      const { deployer, userB, userC } = await setupTest();
-
-      const lockableCollection = await deployCollection("normal");
-      const stream = await deployStream({
-        ticketToken: lockableCollection.address,
-      });
-
-      await lockableCollection
-        .connect(deployer.signer)
-        .grantRole(
-          utils.keccak256(utils.toUtf8Bytes("LOCKER_ROLE")),
-          stream.address
-        );
-
-      await lockableCollection
-        .connect(deployer.signer)
-        .mintByOwner(userB.signer.address, 5);
-
-      await increaseTime(1 * 24 * 60 * 60); // 1 day
-
-      await stream.connect(userB.signer)["stake(uint256)"](2);
-
-      await increaseTime(3 * 60 * 60); // 3 hours
-
-      await expect(
-        stream.connect(userC.signer)["unstake(uint256)"](2)
-      ).to.be.revertedWith("STREAM/NOT_TOKEN_OWNER");
-    });
-
-    it("should fail to stake on behalf of current nft owner", async function () {
-      const { deployer, userB, userC } = await setupTest();
-
-      const lockableCollection = await deployCollection("normal");
-      const stream = await deployStream({
-        ticketToken: lockableCollection.address,
-      });
-
-      await lockableCollection
-        .connect(deployer.signer)
-        .grantRole(
-          utils.keccak256(utils.toUtf8Bytes("LOCKER_ROLE")),
-          stream.address
-        );
-
-      await lockableCollection
-        .connect(deployer.signer)
-        .mintByOwner(userB.signer.address, 5);
-
-      await expect(
-        stream.connect(userC.signer)["stake(uint256)"](2)
-      ).to.be.revertedWith("STREAM/NOT_TOKEN_OWNER");
     });
   });
 
@@ -907,60 +996,6 @@ describe("ERC721StakingEmissionStream", function () {
         [stream, userB.signer],
         [utils.parseEther("-6"), utils.parseEther("6")]
       );
-    });
-
-    it("should fail to unstake on behalf of current nft owner", async function () {
-      const { deployer, userA, userB, userC } = await setupTest();
-
-      const lockableCollection = await deployCollection("normal");
-      const stream = await deployStream({
-        ticketToken: lockableCollection.address,
-      });
-
-      await lockableCollection
-        .connect(deployer.signer)
-        .grantRole(
-          utils.keccak256(utils.toUtf8Bytes("LOCKER_ROLE")),
-          stream.address
-        );
-
-      await lockableCollection
-        .connect(deployer.signer)
-        .mintByOwner(userB.signer.address, 5);
-
-      await increaseTime(1 * 24 * 60 * 60); // 1 day
-
-      await stream.connect(userB.signer)["stake(uint256)"](2);
-
-      await increaseTime(3 * 60 * 60); // 3 hours
-
-      await expect(
-        stream.connect(userC.signer)["unstake(uint256)"](2)
-      ).to.be.revertedWith("STREAM/NOT_TOKEN_OWNER");
-    });
-
-    it("should fail to stake on behalf of current nft owner", async function () {
-      const { deployer, userB, userC } = await setupTest();
-
-      const lockableCollection = await deployCollection("normal");
-      const stream = await deployStream({
-        ticketToken: lockableCollection.address,
-      });
-
-      await lockableCollection
-        .connect(deployer.signer)
-        .grantRole(
-          utils.keccak256(utils.toUtf8Bytes("LOCKER_ROLE")),
-          stream.address
-        );
-
-      await lockableCollection
-        .connect(deployer.signer)
-        .mintByOwner(userB.signer.address, 5);
-
-      await expect(
-        stream.connect(userC.signer)["stake(uint256)"](2)
-      ).to.be.revertedWith("STREAM/NOT_TOKEN_OWNER");
     });
   });
 });
