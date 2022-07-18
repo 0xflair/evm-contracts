@@ -14,13 +14,16 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "../../../common/WithdrawExtension.sol";
 import "../extensions/ERC721EmissionReleaseExtension.sol";
 import "../extensions/ERC721EqualSplitExtension.sol";
+import "../extensions/ERC721LockableClaimExtension.sol";
 
 contract ERC721EqualEmissionStream is
     Initializable,
     Ownable,
+    EmergencyOwnerWithdrawExtension,
     ERC721EmissionReleaseExtension,
     ERC721EqualSplitExtension,
-    WithdrawExtension
+    ERC721LockableClaimExtension,
+    WithdrawExtension,
 {
     using Address for address;
     using Address for address payable;
@@ -68,15 +71,27 @@ contract ERC721EqualEmissionStream is
         __ERC721EqualSplitExtension_init(config.totalTickets);
     }
 
-    function _beforeClaim(uint256 ticketTokenId, address claimToken)
+    function _beforeClaim(
+        uint256 ticketTokenId_,
+        address claimToken_,
+        address owner_
+    )
         internal
-        view
-        override(ERC721MultiTokenStream, ERC721EmissionReleaseExtension)
+        override(
+            ERC721MultiTokenStream,
+            ERC721EmissionReleaseExtension,
+            ERC721LockableClaimExtension
+        )
     {
-        return
-            ERC721EmissionReleaseExtension._beforeClaim(
-                ticketTokenId,
-                claimToken
-            );
+        ERC721LockableClaimExtension._beforeClaim(
+            ticketTokenId_,
+            claimToken_,
+            owner_
+        );
+        ERC721EmissionReleaseExtension._beforeClaim(
+            ticketTokenId_,
+            claimToken_,
+            owner_
+        );
     }
 }
