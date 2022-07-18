@@ -5,6 +5,7 @@ pragma solidity 0.8.9;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
+import "../../../common/WithdrawExtension.sol";
 import "../../../common/meta-transactions/ERC2771ContextOwnable.sol";
 import "../extensions/ERC721CollectionMetadataExtension.sol";
 import "../extensions/ERC721PrefixedMetadataExtension.sol";
@@ -22,11 +23,11 @@ import "../extensions/ERC721OpenSeaNoGasExtension.sol";
 contract ERC721FullFeaturedCollection is
     Ownable,
     ERC165Storage,
+    WithdrawExtension,
     ERC721PrefixedMetadataExtension,
     ERC721OwnerMintExtension,
     ERC721PreSaleExtension,
     ERC721PublicSaleExtension,
-    ERC721SimpleProceedsExtension,
     ERC721RoleBasedMintExtension,
     ERC721RoleBasedLockableExtension,
     ERC721RoyaltyExtension,
@@ -86,7 +87,7 @@ contract ERC721FullFeaturedCollection is
             config.publicSalePrice,
             config.publicSaleMaxMintPerTx
         );
-        __ERC721SimpleProceedsExtension_init(config.proceedsRecipient);
+        __RecipientWithdrawExtension_init(config.proceedsRecipient);
         __ERC721RoyaltyExtension_init(
             config.defaultRoyaltyAddress,
             config.defaultRoyaltyBps

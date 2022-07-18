@@ -24,9 +24,9 @@ interface IWithdrawExtension {
 
 abstract contract WithdrawExtension is
     IWithdrawExtension,
-    Initializable,
-    ERC165Storage,
-    Ownable
+    Initializable, 
+    Ownable,
+    ERC165Storage
 {
     using Address for address;
     using Address for address payable;
@@ -116,12 +116,12 @@ abstract contract WithdrawExtension is
         }
     }
 
-    function withdrawByAmount(uint256 amount) {
+    function withdrawByAmount(uint256 amount) external {
         require(withdrawRecipient != address(0), "WITHDRAW/NO_RECIPIENT");
         require(!amount, "WITHDRAW/NO_AMOUNT");
 
         uint256 balance = address(this).balance;
-        require(amount =< balance, "WITHDRAW/NOT_SUFFICIENT_BALANCE");
+        require(amount <= balance, "WITHDRAW/NOT_SUFFICIENT_BALANCE");
 
         payable(withdrawRecipient).transfer(amount);
     }
@@ -133,13 +133,14 @@ abstract contract WithdrawExtension is
 
 
     /* PUBLIC */
-    // function supportsInterface(bytes4 interfaceId)
-    //     public
-    //     view
-    //     virtual
-    //     override(ERC165Storage)
-    //     returns (bool)
-    // {
-    //     return ERC165Storage.supportsInterface(interfaceId);
-    // }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165Storage)
+        returns (bool)
+    {
+        return ERC165Storage.supportsInterface(interfaceId);
+    }
 }
