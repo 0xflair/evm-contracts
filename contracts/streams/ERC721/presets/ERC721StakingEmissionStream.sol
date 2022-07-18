@@ -100,12 +100,10 @@ contract ERC721StakingEmissionStream is
         ticketTokenId_;
         claimToken_;
 
-        uint64 sumTotalOfStakingDurations = totalStakedDuration(ticketTokenId_);
-
         return
             emissionRate *
             // Intentionally rounded down
-            (sumTotalOfStakingDurations / emissionTimeUnit);
+            (totalStakedDuration(ticketTokenId_) / emissionTimeUnit);
     }
 
     function _stakingTimeLimit()
