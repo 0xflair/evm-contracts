@@ -60,20 +60,6 @@ abstract contract WithdrawExtension is
         withdrawRecipient = _withdrawRecipient;
     }
 
-    function __EmergencyOwnerWithdrawExtension_init()
-        internal
-        onlyInitializing
-    {
-        __EmergencyOwnerWithdrawExtension_init_unchained();
-    }
-
-    function __EmergencyOwnerWithdrawExtension_init_unchained()
-        internal
-        onlyInitializing
-    {
-        _registerInterface(type(IWithdrawExtension).interfaceId);
-    }
-
     /* ADMIN */
 
     function setWithdrawRecipient(address _withdrawRecipient)
