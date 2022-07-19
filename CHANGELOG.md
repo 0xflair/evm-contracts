@@ -1,3 +1,31 @@
+### [1.16.5](https://github.com/0xflair/evm-contracts/compare/v1.16.4...v1.16.5) (2022-07-19)
+
+
+### Bug Fixes
+
+* deploy to rinkeby testnet ([f24cf0b](https://github.com/0xflair/evm-contracts/commit/f24cf0b9f81ba7ee23b8ca5ee25f437718df0171))
+
+### [1.16.4](https://github.com/0xflair/evm-contracts/compare/v1.16.3...v1.16.4) (2022-07-19)
+
+
+### Bug Fixes
+
+* add helper to calculate unlocking times ([f28c880](https://github.com/0xflair/evm-contracts/commit/f28c880b7201de4b45dcb54f4be4a2dfeec08640))
+
+### [1.16.3](https://github.com/0xflair/evm-contracts/compare/v1.16.2...v1.16.3) (2022-07-19)
+
+
+### Bug Fixes
+
+* add missing filter function ([548437f](https://github.com/0xflair/evm-contracts/commit/548437f4ac3d1f95dc235500c4d9e2d0fa94d699))
+
+### [1.16.2](https://github.com/0xflair/evm-contracts/compare/v1.16.1...v1.16.2) (2022-07-18)
+
+
+### Bug Fixes
+
+* add a method to filter unlocked tokens ([84c48e7](https://github.com/0xflair/evm-contracts/commit/84c48e74c358141188273cd1b4748e064822db02))
+
 ### [1.16.1](https://github.com/0xflair/evm-contracts/compare/v1.16.0...v1.16.1) (2022-07-18)
 
 
