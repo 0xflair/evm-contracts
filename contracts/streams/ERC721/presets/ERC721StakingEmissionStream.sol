@@ -62,7 +62,7 @@ contract ERC721StakingEmissionStream is
     {
         _transferOwnership(deployer);
 
-        __EmergencyOwnerWithdrawExtension_init();
+        __WithdrawExtension_init(deployer);
         __ERC721MultiTokenStream_init(
             config.ticketToken,
             config.lockedUntilTimestamp

@@ -604,21 +604,6 @@ describe("ERC721ShareInstantStream", function () {
       ).to.changeEtherBalances([userB.signer], [utils.parseEther("0.4")]);
     });
 
-    it("should not allow to withdraw without a recipient", async function () {
-      const { deployer, userA } = await setupTest();
-
-      const stream = await deployStream();
-
-      await userA.TestERC20.mint(userA.signer.address, utils.parseEther("44"));
-      await userA.TestERC20.transfer(stream.address, utils.parseEther("44"));
-
-      await expect(
-        stream
-          .connect(deployer.signer)
-          .withdraw([ZERO_ADDRESS], [utils.parseEther("0")])
-      ).to.be.revertedWith("WITHDRAW/NO_RECIPIENT");
-    });
-
     it("should not allow to withdraw with another address that does not have ownership access", async function () {
       const { deployer, userA, userB } = await setupTest();
 
