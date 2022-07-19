@@ -528,4 +528,73 @@ describe("ERC721ShareInstantStream", function () {
       );
     });
   });
+
+  describe("Withdraw Extension", function () {
+    it("should set the withdraw recipient correctly", async function () {
+      const { deployer, userA } = await setupTest();
+
+      const stream = await deployStream();
+
+      await stream
+        .connect(deployer.signer)
+        .setWithdrawRecipient(userA.signer.address);
+
+      expect(await stream.withdrawRecipient()).to.equal(userA.signer.address);
+    });
+
+    it("should withdraw the stream funds to the recipient", async function () {
+      const { deployer, userA, userB } = await setupTest();
+
+      const stream = await deployStream();
+
+      await userA.TestERC20.mint(userA.signer.address, utils.parseEther("44"));
+      await userA.TestERC20.transfer(stream.address, utils.parseEther("44"));
+
+      await stream
+        .connect(deployer.signer)
+        .setWithdrawRecipient(userB.signer.address);
+
+      await stream
+        .connect(deployer.signer)
+        .withdraw([ZERO_ADDRESS], [utils.parseEther("0")]);
+
+      expect(await userB.TestERC20.balanceOf(userB.signer.address)).to.equal(
+        utils.parseEther("0")
+      );
+    });
+
+    it("should not allow to withdraw without a recipient", async function () {
+      const { deployer, userA } = await setupTest();
+
+      const stream = await deployStream();
+
+      await userA.TestERC20.mint(userA.signer.address, utils.parseEther("44"));
+      await userA.TestERC20.transfer(stream.address, utils.parseEther("44"));
+
+      await expect(
+        stream
+          .connect(deployer.signer)
+          .withdraw([ZERO_ADDRESS], [utils.parseEther("0")])
+      ).to.be.revertedWith("WITHDRAW/NO_RECIPIENT");
+    });
+
+    it("should not allow to withdraw with another address that does not have access", async function () {
+      const { deployer, userA, userB } = await setupTest();
+
+      const stream = await deployStream();
+
+      await userA.TestERC20.mint(userA.signer.address, utils.parseEther("44"));
+      await userA.TestERC20.transfer(stream.address, utils.parseEther("44"));
+
+      await stream
+        .connect(deployer.signer)
+        .setWithdrawRecipient(userB.signer.address);
+
+      await expect(
+        stream
+          .connect(userB.signer)
+          .withdraw([ZERO_ADDRESS], [utils.parseEther("0")])
+      ).to.be.revertedWith("Ownable: caller is not the owner");
+    });
+  });
 });
