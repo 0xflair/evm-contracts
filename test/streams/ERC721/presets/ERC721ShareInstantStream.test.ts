@@ -542,6 +542,28 @@ describe("ERC721ShareInstantStream", function () {
       expect(await stream.withdrawRecipient()).to.equal(userA.signer.address);
     });
 
+    it("should lock the withdraw recipient correctly so no new recipient can be set", async function () {
+      const { deployer, userA, userB } = await setupTest();
+
+      const stream = await deployStream();
+
+      await stream
+        .connect(deployer.signer)
+        .setWithdrawRecipient(userA.signer.address);
+
+      expect(await stream.withdrawRecipient()).to.equal(userA.signer.address);
+
+      await stream.connect(deployer.signer).lockWithdrawRecipient();
+
+      expect(await stream.withdrawRecipientLocked()).to.equal(true);
+
+      await expect(
+        stream
+          .connect(deployer.signer)
+          .setWithdrawRecipient(userB.signer.address)
+      ).to.be.revertedWith("WITHDRAW/RECIPIENT_LOCKED");
+    });
+
     it("should withdraw the stream funds to the recipient", async function () {
       const { deployer, userA, userB } = await setupTest();
 
@@ -578,7 +600,7 @@ describe("ERC721ShareInstantStream", function () {
       ).to.be.revertedWith("WITHDRAW/NO_RECIPIENT");
     });
 
-    it("should not allow to withdraw with another address that does not have access", async function () {
+    it("should not allow to withdraw with another address that does not have ownership access", async function () {
       const { deployer, userA, userB } = await setupTest();
 
       const stream = await deployStream();
