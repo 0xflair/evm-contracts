@@ -562,25 +562,46 @@ describe("ERC721ShareInstantStream", function () {
       ).to.be.revertedWith("WITHDRAW/RECIPIENT_LOCKED");
     });
 
-    it("should withdraw the stream funds to the recipient", async function () {
+    it("should withdraw all the funds to the recipient", async function () {
       const { deployer, userA, userB } = await setupTest();
 
       const stream = await deployStream();
 
-      await userA.TestERC20.mint(userA.signer.address, utils.parseEther("44"));
-      await userA.TestERC20.transfer(stream.address, utils.parseEther("44"));
+      await userA.signer.sendTransaction({
+        to: stream.address,
+        value: utils.parseEther("4.4"),
+      });
 
       await stream
         .connect(deployer.signer)
         .setWithdrawRecipient(userB.signer.address);
 
+      await expect(
+        await stream
+          .connect(deployer.signer)
+          .withdraw([ZERO_ADDRESS], [utils.parseEther("4.4")])
+      ).to.changeEtherBalances([userB.signer], [utils.parseEther("4.4")]);
+    });
+
+    it("should withdraw a portion of funds to the recipient", async function () {
+      const { deployer, userA, userB } = await setupTest();
+
+      const stream = await deployStream();
+
+      await userA.signer.sendTransaction({
+        to: stream.address,
+        value: utils.parseEther("4.4"),
+      });
+
       await stream
         .connect(deployer.signer)
-        .withdraw([ZERO_ADDRESS], [utils.parseEther("0")]);
+        .setWithdrawRecipient(userB.signer.address);
 
-      expect(await userB.TestERC20.balanceOf(userB.signer.address)).to.equal(
-        utils.parseEther("0")
-      );
+      await expect(
+        await stream
+          .connect(deployer.signer)
+          .withdraw([ZERO_ADDRESS], [utils.parseEther("0.4")])
+      ).to.changeEtherBalances([userB.signer], [utils.parseEther("0.4")]);
     });
 
     it("should not allow to withdraw without a recipient", async function () {
