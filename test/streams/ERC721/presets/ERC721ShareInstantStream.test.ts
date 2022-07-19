@@ -551,8 +551,6 @@ describe("ERC721ShareInstantStream", function () {
         .connect(deployer.signer)
         .setWithdrawRecipient(userA.signer.address);
 
-      expect(await stream.withdrawRecipient()).to.equal(userA.signer.address);
-
       await stream.connect(deployer.signer).lockWithdrawRecipient();
 
       expect(await stream.withdrawRecipientLocked()).to.equal(true);
@@ -617,6 +615,29 @@ describe("ERC721ShareInstantStream", function () {
           .connect(userB.signer)
           .withdraw([ZERO_ADDRESS], [utils.parseEther("0")])
       ).to.be.revertedWith("Ownable: caller is not the owner");
+    });
+
+    it("should not allow to withdraw when emergency withdraw power is revoked", async function () {
+      const { deployer, userA, userB } = await setupTest();
+
+      const stream = await deployStream();
+
+      await userA.TestERC20.mint(userA.signer.address, utils.parseEther("44"));
+      await userA.TestERC20.transfer(stream.address, utils.parseEther("44"));
+
+      await stream
+        .connect(deployer.signer)
+        .setWithdrawRecipient(userB.signer.address);
+
+      await stream.connect(deployer.signer).revokeWithdrawPower();
+
+      expect(await stream.withdrawPowerRevoked()).to.equal(true);
+
+      await expect(
+        stream
+          .connect(deployer.signer)
+          .withdraw([ZERO_ADDRESS], [utils.parseEther("0")])
+      ).to.be.revertedWith("WITHDRAW/EMERGENCY_POWER_REVOKED");
     });
   });
 });
