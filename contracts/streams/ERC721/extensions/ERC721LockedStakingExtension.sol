@@ -30,8 +30,8 @@ interface IERC721LockedStakingExtension {
 abstract contract ERC721LockedStakingExtension is
     IERC721LockedStakingExtension,
     Initializable,
-    ERC165Storage,
     Ownable,
+    ERC165Storage,
     ERC721MultiTokenStream
 {
     // Minimum seconds that token must be locked before unstaking.

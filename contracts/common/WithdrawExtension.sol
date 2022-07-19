@@ -13,44 +13,47 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 interface IWithdrawExtension {
-    function withdraw(address[] calldata claimTokens) external;
+    function withdraw(
+        address[] calldata claimTokens,
+        uint256[] calldata amounts
+    ) external;
 
     function setWithdrawRecipient(address _withdrawRecipient) external;
 
     function lockWithdrawRecipient() external;
 
-    function revokeEmergencyPower() external;
+    function revokeWithdrawPower() external;
 }
 
 abstract contract WithdrawExtension is
     IWithdrawExtension,
-    Initializable, 
+    Initializable,
     Ownable,
     ERC165Storage
 {
     using Address for address;
     using Address for address payable;
 
-    event EmergencyPowerRevoked();
-    event EmergencyWithdrawn(address[] claimTokens);
+    event WithdrawPowerRevoked();
+    event Withdrawn(address[] claimTokens, uint256[] amounts);
 
     address public withdrawRecipient;
     bool public withdrawRecipientLocked;
-    bool public emergencyPowerRevoked;
-
+    bool public withdrawPowerRevoked;
 
     /* INTERNAL */
 
-    function __RecipientWithdrawExtension_init(address _withdrawRecipient)
+    function __WithdrawExtension_init(address _withdrawRecipient)
         internal
         onlyInitializing
     {
-        __RecipientWithdrawExtension_init_unchained(_withdrawRecipient);
+        __WithdrawExtension_init_unchained(_withdrawRecipient);
     }
 
-    function __RecipientWithdrawExtension_init_unchained(
-        address _withdrawRecipient
-    ) internal onlyInitializing {
+    function __WithdrawExtension_init_unchained(address _withdrawRecipient)
+        internal
+        onlyInitializing
+    {
         _registerInterface(type(IWithdrawExtension).interfaceId);
 
         withdrawRecipient = _withdrawRecipient;
@@ -70,7 +73,6 @@ abstract contract WithdrawExtension is
         _registerInterface(type(IWithdrawExtension).interfaceId);
     }
 
-
     /* ADMIN */
 
     function setWithdrawRecipient(address _withdrawRecipient)
@@ -86,61 +88,26 @@ abstract contract WithdrawExtension is
         withdrawRecipientLocked = true;
     }
 
-    function withdraw(address[] calldata claimTokens)
-        external
-        onlyOwner
-    {
-        // withdraw by recipient
-        if (withdrawRecipient != address(0)) {
-            require(withdrawRecipient != address(0), "WITHDRAW/NO_RECIPIENT");
+    function withdraw(
+        address[] calldata claimTokens,
+        uint256[] calldata amounts
+    ) external onlyOwner {
+        require(withdrawRecipient != address(0), "WITHDRAW/NO_RECIPIENT");
+        require(!withdrawPowerRevoked, "WITHDRAW/EMERGENCY_POWER_REVOKED");
 
-            uint256 balance = address(this).balance;
-
-            payable(withdrawRecipient).transfer(balance);
-        // emergency withdraw
-        } else {
-            require(!emergencyPowerRevoked, "WITHDRAW/EMERGENCY_POWER_REVOKED");
-
-            address _owner = owner();
-
-            for (uint256 i = 0; i < claimTokens.length; i++) {
-                if (claimTokens[i] == address(0)) {
-                    payable(_owner).sendValue(address(this).balance);
-                } else {
-                    IERC20(claimTokens[i]).transfer(
-                        _owner,
-                        IERC20(claimTokens[i]).balanceOf(address(this))
-                    );
-                }
+        for (uint256 i = 0; i < claimTokens.length; i++) {
+            if (claimTokens[i] == address(0)) {
+                payable(withdrawRecipient).sendValue(amounts[i]);
+            } else {
+                IERC20(claimTokens[i]).transfer(withdrawRecipient, amounts[i]);
             }
         }
+
+        emit Withdrawn(claimTokens, amounts);
     }
 
-    function withdrawByAmount(uint256 amount) external {
-        require(withdrawRecipient != address(0), "WITHDRAW/NO_RECIPIENT");
-        require(!amount, "WITHDRAW/NO_AMOUNT");
-
-        uint256 balance = address(this).balance;
-        require(amount <= balance, "WITHDRAW/NOT_SUFFICIENT_BALANCE");
-
-        payable(withdrawRecipient).transfer(amount);
-    }
-
-    function revokeEmergencyPower() external onlyOwner {
-        emergencyPowerRevoked = true;
-        emit EmergencyPowerRevoked();
-    }
-
-
-    /* PUBLIC */
-
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC165Storage)
-        returns (bool)
-    {
-        return ERC165Storage.supportsInterface(interfaceId);
+    function revokeWithdrawPower() external onlyOwner {
+        withdrawPowerRevoked = true;
+        emit WithdrawPowerRevoked();
     }
 }

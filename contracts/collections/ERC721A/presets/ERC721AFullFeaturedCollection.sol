@@ -4,8 +4,8 @@ pragma solidity 0.8.9;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
+import "../../../common/WithdrawExtension.sol";
 import "../../../common/meta-transactions/ERC2771ContextOwnable.sol";
-import "../../ERC721/extensions/ERC721SimpleProceedsExtension.sol";
 import "../../ERC721/extensions/ERC721RoyaltyExtension.sol";
 import "../extensions/ERC721ACollectionMetadataExtension.sol";
 import "../extensions/ERC721APrefixedMetadataExtension.sol";
@@ -18,20 +18,20 @@ import "../extensions/ERC721ARoleBasedLockableExtension.sol";
 import "../extensions/ERC721AOpenSeaNoGasExtension.sol";
 
 contract ERC721AFullFeaturedCollection is
+    Initializable,
     Ownable,
     ERC165Storage,
-    ERC721A,
-    ERC2771ContextOwnable,
+    WithdrawExtension,
     ERC721ACollectionMetadataExtension,
     ERC721APrefixedMetadataExtension,
     ERC721AMinterExtension,
     ERC721AOwnerMintExtension,
     ERC721APreSaleExtension,
     ERC721APublicSaleExtension,
-    ERC721SimpleProceedsExtension,
     ERC721ARoleBasedMintExtension,
     ERC721ARoleBasedLockableExtension,
     ERC721RoyaltyExtension,
+    ERC2771ContextOwnable,
     ERC721AOpenSeaNoGasExtension
 {
     struct Config {
@@ -65,6 +65,7 @@ contract ERC721AFullFeaturedCollection is
 
         _transferOwnership(deployer);
 
+        __WithdrawExtension_init(config.proceedsRecipient);
         __ERC721ACollectionMetadataExtension_init(
             config.name,
             config.symbol,
@@ -86,7 +87,6 @@ contract ERC721AFullFeaturedCollection is
             config.publicSalePrice,
             config.publicSaleMaxMintPerTx
         );
-        __ERC721SimpleProceedsExtension_init(config.proceedsRecipient);
         __ERC721RoyaltyExtension_init(
             config.defaultRoyaltyAddress,
             config.defaultRoyaltyBps
@@ -140,13 +140,10 @@ contract ERC721AFullFeaturedCollection is
         virtual
         override(
             ERC165Storage,
-            ERC721A,
             ERC721ACollectionMetadataExtension,
             ERC721APrefixedMetadataExtension,
-            ERC721AMinterExtension,
             ERC721APreSaleExtension,
             ERC721APublicSaleExtension,
-            ERC721SimpleProceedsExtension,
             ERC721AOwnerMintExtension,
             ERC721ARoleBasedMintExtension,
             ERC721ARoleBasedLockableExtension,
