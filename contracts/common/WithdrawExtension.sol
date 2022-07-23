@@ -75,7 +75,7 @@ abstract contract WithdrawExtension is
     }
 
     /* INTERNAL */
-    function _assetWithdrawAccess(WithdrawMode withdrawMode, address account) internal returns (bool) {
+    function _assertWithdrawAccess(WithdrawMode withdrawMode, address account) internal returns (bool) {
         if (withdrawMode == WithdrawMode.NOBODY) {
             return false;
         } else if (withdrawMode == WithdrawMode.ANYONE) {
@@ -126,7 +126,7 @@ abstract contract WithdrawExtension is
         * the sender of the function call. If in future we want to handle "withdraw"
         * functionality via meta transactions, we should consider using `_msgSender`
         */
-        _assetWithdrawAccess(withdrawMode, msg.sender);
+        _assertWithdrawAccess(withdrawMode, msg.sender);
         require(withdrawRecipient != address(0), "WITHDRAW/NO_RECIPIENT");
         require(!withdrawPowerRevoked, "WITHDRAW/EMERGENCY_POWER_REVOKED");
 
