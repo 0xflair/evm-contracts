@@ -13,17 +13,28 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-interface IWithdrawExtension {
-    function withdraw(
-        address[] calldata claimTokens,
-        uint256[] calldata amounts
-    ) external;
+enum WithdrawMode {
+  OWNER,
+  RECIPIENT,
+  ANYONE,
+  NOBODY
+}
 
+interface IWithdrawExtension {
     function setWithdrawRecipient(address _withdrawRecipient) external;
 
     function lockWithdrawRecipient() external;
 
     function revokeWithdrawPower() external;
+
+    function setWithdrawMode(WithdrawMode _withdrawMode) external;
+
+    function lockWithdrawMode() external;
+
+    function withdraw(
+        address[] calldata claimTokens,
+        uint256[] calldata amounts
+    ) external;
 }
 
 abstract contract WithdrawExtension is
@@ -41,23 +52,41 @@ abstract contract WithdrawExtension is
     address public withdrawRecipient;
     bool public withdrawRecipientLocked;
     bool public withdrawPowerRevoked;
+    WithdrawMode public withdrawMode;
+    bool public withdrawModeLocked;
 
     /* INTERNAL */
 
-    function __WithdrawExtension_init(address _withdrawRecipient)
+    function __WithdrawExtension_init(address _withdrawRecipient, WithdrawMode _withdrawMode)
         internal
         onlyInitializing
     {
-        __WithdrawExtension_init_unchained(_withdrawRecipient);
+        __WithdrawExtension_init_unchained(_withdrawRecipient, _withdrawMode);
     }
 
-    function __WithdrawExtension_init_unchained(address _withdrawRecipient)
+    function __WithdrawExtension_init_unchained(address _withdrawRecipient, WithdrawMode _withdrawMode)
         internal
         onlyInitializing
     {
         _registerInterface(type(IWithdrawExtension).interfaceId);
 
         withdrawRecipient = _withdrawRecipient;
+        withdrawMode = _withdrawMode;
+    }
+
+    /* INTERNAL */
+    function _assetWithdrawAccess(WithdrawMode withdrawMode, address account) internal returns (bool) {
+        if (withdrawMode == WithdrawMode.NOBODY) {
+            return false;
+        } else if (withdrawMode == WithdrawMode.ANYONE) {
+            return true;
+        } else if (withdrawMode == WithdrawMode.RECIPIENT) {
+            require(withdrawRecipient == account, "WITHDRAW: withdraw only by recipient");
+            return true;
+        } else if (withdrawMode == WithdrawMode.OWNER) {
+            require(owner() == account, "WITHDRAW: withdraw only by owner");
+            return true;
+        }
     }
 
     /* ADMIN */
@@ -75,10 +104,29 @@ abstract contract WithdrawExtension is
         withdrawRecipientLocked = true;
     }
 
+    function setWithdrawMode(WithdrawMode _withdrawMode)   
+        external
+        onlyOwner
+    {
+        require(!withdrawModeLocked, "WITHDRAW/WITHDRAW_MODE_LOCKED");
+        withdrawMode = _withdrawMode;
+    }
+
+    function lockWithdrawMode() external onlyOwner {
+        require(!withdrawModeLocked, "WITHDRAW/WITHDRAW_MODE_LOCKED");
+        withdrawModeLocked = true;
+    }
+
     function withdraw(
         address[] calldata claimTokens,
         uint256[] calldata amounts
-    ) external onlyOwner {
+    ) external {
+        /**
+        * We are using msg.sender for smaller attack surface when evaluating 
+        * the sender of the function call. If in future we want to handle "withdraw"
+        * functionality via meta transactions, we should consider using `_msgSender`
+        */
+        _assetWithdrawAccess(withdrawMode, msg.sender);
         require(withdrawRecipient != address(0), "WITHDRAW/NO_RECIPIENT");
         require(!withdrawPowerRevoked, "WITHDRAW/EMERGENCY_POWER_REVOKED");
 

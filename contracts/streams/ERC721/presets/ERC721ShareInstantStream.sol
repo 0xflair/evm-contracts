@@ -51,7 +51,7 @@ contract ERC721ShareInstantStream is
     {
         _transferOwnership(deployer);
 
-        __WithdrawExtension_init(deployer);
+        __WithdrawExtension_init(deployer, WithdrawMode.OWNER);
         __ERC721MultiTokenStream_init(
             config.ticketToken,
             config.lockedUntilTimestamp

@@ -66,7 +66,7 @@ contract ERC721FullFeaturedCollection is
 
         _transferOwnership(deployer);
 
-        __WithdrawExtension_init(config.proceedsRecipient);
+        __WithdrawExtension_init(config.proceedsRecipient, WithdrawMode.ANYONE);
         __ERC721CollectionMetadataExtension_init(
             config.name,
             config.symbol,

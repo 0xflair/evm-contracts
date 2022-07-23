@@ -620,7 +620,7 @@ describe("ERC721ShareInstantStream", function () {
         stream
           .connect(userB.signer)
           .withdraw([ZERO_ADDRESS], [utils.parseEther("0")])
-      ).to.be.revertedWith("Ownable: caller is not the owner");
+      ).to.be.revertedWith("WITHDRAW: withdraw only by owner");
     });
 
     it("should not allow to withdraw when emergency withdraw power is revoked", async function () {
