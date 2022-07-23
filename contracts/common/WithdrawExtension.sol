@@ -74,7 +74,6 @@ abstract contract WithdrawExtension is
         withdrawMode = _withdrawMode;
     }
 
-    /* INTERNAL */
     function _assertWithdrawAccess(WithdrawMode withdrawMode, address account) internal returns (bool) {
         if (withdrawMode == WithdrawMode.NOBODY) {
             return false;
