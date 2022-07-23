@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { utils, BigNumberish } from "ethers";
 import hre, { deployments, getUnnamedAccounts } from "hardhat";
 
-import { ERC721StakingEmissionStream } from "../../../../typechain";
+import { ERC721LockedStakingEmissionStream } from "../../../../typechain";
 import { deployPermanentContract } from "../../../../hardhat.util";
 
 import { setupTest } from "../../../setup";
@@ -12,9 +12,11 @@ import { deployCollection } from "../../../collections/presets/ERC721FullFeature
 const deployStream = async function (args?: {
   ticketToken?: string;
   lockedUntilTimestamp?: BigNumberish;
-  minStakingLockTime?: BigNumberish;
+  minStakingDuration?: BigNumberish;
   maxStakingTotalDurations?: BigNumberish;
-}): Promise<ERC721StakingEmissionStream> {
+  emissionStart?: BigNumberish;
+  emissionEnd?: BigNumberish;
+}): Promise<ERC721LockedStakingEmissionStream> {
   const accounts = await getUnnamedAccounts();
   const nowMinusOneDayUnix =
     Math.floor(new Date().getTime() / 1000) - 24 * 60 * 60;
@@ -26,30 +28,32 @@ const deployStream = async function (args?: {
     deployments,
     accounts[0],
     accounts[0],
-    "ERC721StakingEmissionStream",
+    "ERC721LockedStakingEmissionStream",
     [
       {
         // Base
         ticketToken: ticketToken.address,
         lockedUntilTimestamp: nowMinusOneDayUnix,
         // Locked staking extension
-        minStakingLockTime: 3600, // 1 hour
+        minStakingDuration: 3600, // 1 hour
         maxStakingTotalDurations: 300 * 3600, // 300 hours
         // Emission release extension
         emissionRate: utils.parseEther("2"),
         emissionTimeUnit: 3600, // 1 hour
         emissionStart: nowMinusOneDayUnix,
         emissionEnd: nowPlusFiveDaysUnix,
+        // Equal split extension
+        totalTickets: 1,
         // Lockable claim extension
         claimLockedUntil: 0,
 
         ...(args || {}),
       },
     ]
-  )) as ERC721StakingEmissionStream;
+  )) as ERC721LockedStakingEmissionStream;
 };
 
-describe("ERC721StakingEmissionStream", function () {
+describe("ERC721LockedStakingEmissionStream", function () {
   describe("Interfaces", function () {
     it("supports IERC721LockedStakingExtension", async function () {
       await setupTest();
@@ -78,13 +82,15 @@ describe("ERC721StakingEmissionStream", function () {
           ticketToken: userA.TestERC721.address,
           lockedUntilTimestamp: 0,
           // Locked staking extension
-          minStakingLockTime: 3600, // 1 hour
+          minStakingDuration: 3600, // 1 hour
           maxStakingTotalDurations: 300 * 3600, // 300 hours
           // Emission release extension
           emissionRate: utils.parseEther("2"),
           emissionTimeUnit: 3600, // 1 hour
           emissionStart: 0,
           emissionEnd: Math.floor(+new Date() / 1000 + 100000000),
+          // Equal split extension
+          totalTickets: 1,
           // Lockable claim extension
           claimLockedUntil: 0,
         },
@@ -110,7 +116,7 @@ describe("ERC721StakingEmissionStream", function () {
       expect(emittedAddress).to.equal(predictedAddress);
 
       const streamClone = await hre.ethers.getContractAt(
-        "ERC721StakingEmissionStream",
+        "ERC721LockedStakingEmissionStream",
         emittedAddress
       );
 
@@ -132,14 +138,14 @@ describe("ERC721StakingEmissionStream", function () {
     });
   });
 
-  describe("Common", function () {
+  describe.only("Common", function () {
     it("should fail to claim when claiming is locked", async function () {
       const { deployer, userB } = await setupTest();
 
       const lockableCollection = await deployCollection("normal");
       const stream = await deployStream({
         ticketToken: lockableCollection.address,
-        minStakingLockTime: 20 * 3600, // 20 hours
+        minStakingDuration: 20 * 3600, // 20 hours
       });
 
       await lockableCollection
@@ -161,7 +167,7 @@ describe("ERC721StakingEmissionStream", function () {
 
       await expect(
         stream.connect(userB.signer)["unstake(uint256)"](2)
-      ).to.be.revertedWith("STREAM/NOT_LOCKED_ENOUGH");
+      ).to.be.revertedWith("STREAM/NOT_STAKED_LONG_ENOUGH");
 
       expect(
         await lockableCollection.connect(userB.signer).locked(2)
@@ -182,7 +188,7 @@ describe("ERC721StakingEmissionStream", function () {
       const lockableCollection = await deployCollection("normal");
       const stream = await deployStream({
         ticketToken: lockableCollection.address,
-        minStakingLockTime: 20 * 3600, // 20 hours
+        minStakingDuration: 20 * 3600, // 20 hours
       });
 
       await lockableCollection
@@ -204,7 +210,7 @@ describe("ERC721StakingEmissionStream", function () {
 
       await expect(
         stream.connect(userB.signer)["unstake(uint256)"](2)
-      ).to.be.revertedWith("STREAM/NOT_LOCKED_ENOUGH");
+      ).to.be.revertedWith("STREAM/NOT_STAKED_LONG_ENOUGH");
 
       expect(
         await lockableCollection.connect(userB.signer).locked(2)
@@ -279,7 +285,7 @@ describe("ERC721StakingEmissionStream", function () {
       const lockableCollection = await deployCollection("normal");
       const stream = await deployStream({
         ticketToken: lockableCollection.address,
-        minStakingLockTime: 1 * 3600, // 1 hour
+        minStakingDuration: 1 * 3600, // 1 hour
         maxStakingTotalDurations: 2 * 3600, // 2 hours
       });
 
@@ -334,7 +340,7 @@ describe("ERC721StakingEmissionStream", function () {
       const lockableCollection = await deployCollection("normal");
       const stream = await deployStream({
         ticketToken: lockableCollection.address,
-        minStakingLockTime: 1 * 3600, // 1 hour
+        minStakingDuration: 1 * 3600, // 1 hour
         maxStakingTotalDurations: 2 * 3600, // 2 hours
       });
 
@@ -372,6 +378,48 @@ describe("ERC721StakingEmissionStream", function () {
       await expect(
         stream.connect(userB.signer)["stake(uint256)"](2)
       ).to.be.revertedWith("STREAM/MAX_STAKE_DURATION_EXCEEDED");
+    });
+
+    it("should correctly calculate staked duration even if emission end is not set", async function () {
+      const { deployer, userB } = await setupTest();
+
+      const lockableCollection = await deployCollection("normal");
+      const stream = await deployStream({
+        ticketToken: lockableCollection.address,
+        emissionEnd: 0,
+      });
+
+      await lockableCollection
+        .connect(deployer.signer)
+        .grantRole(
+          utils.keccak256(utils.toUtf8Bytes("LOCKER_ROLE")),
+          stream.address
+        );
+
+      await lockableCollection
+        .connect(deployer.signer)
+        .mintByOwner(userB.signer.address, 5);
+
+      await increaseTime(1 * 24 * 60 * 60); // 1 day
+
+      expect(
+        await stream.connect(userB.signer)["totalStakedDuration(uint256)"](2)
+      ).to.be.equal(0);
+      expect(
+        await stream.connect(userB.signer)["streamClaimableAmount(uint256)"](2)
+      ).to.be.equal(0);
+
+      await stream.connect(userB.signer)["stake(uint256)"](2);
+
+      await increaseTime(3 * 60 * 60); // 3 hours
+
+      expect(
+        await stream.connect(userB.signer)["streamClaimableAmount(uint256)"](2)
+      ).to.be.equal(utils.parseEther("6"));
+
+      expect(
+        await stream.connect(userB.signer)["totalStakedDuration(uint256)"](2)
+      ).to.be.equal(10_800);
     });
   });
 

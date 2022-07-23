@@ -1,3 +1,60 @@
+### [1.16.13](https://github.com/0xflair/evm-contracts/compare/v1.16.12...v1.16.13) (2022-07-21)
+
+
+### Bug Fixes
+
+* deploy to all networks ([c7a2403](https://github.com/0xflair/evm-contracts/commit/c7a24033a8cadd48ee185a9d224d9e8d1e835e57))
+
+### [1.16.12](https://github.com/0xflair/evm-contracts/compare/v1.16.11...v1.16.12) (2022-07-21)
+
+
+### Bug Fixes
+
+* deploy to rinkeby and polygon ([4787690](https://github.com/0xflair/evm-contracts/commit/47876903d6683be4bc5547d07bec3f49828b41b8))
+* keep the emission rate a collection-level value for consistency ([23547cd](https://github.com/0xflair/evm-contracts/commit/23547cdb539af47f6aa3b5829fb2af445b31b587))
+
+### [1.16.11](https://github.com/0xflair/evm-contracts/compare/v1.16.10...v1.16.11) (2022-07-20)
+
+
+### Bug Fixes
+
+* separate staking core from lock-based staking ([2d178e9](https://github.com/0xflair/evm-contracts/commit/2d178e9027bf3be2981e7b84c2233db230680f83))
+
+### [1.16.10](https://github.com/0xflair/evm-contracts/compare/v1.16.9...v1.16.10) (2022-07-20)
+
+
+### Bug Fixes
+
+* consistent method naming and deploy to polygon and rinkeby ([a5080bd](https://github.com/0xflair/evm-contracts/commit/a5080bddb6d1408445d38a8dbf3b3e99be6e5225))
+
+### [1.16.9](https://github.com/0xflair/evm-contracts/compare/v1.16.8...v1.16.9) (2022-07-20)
+
+
+### Bug Fixes
+
+* add helper func to calculate emission amount per token ([4e90275](https://github.com/0xflair/evm-contracts/commit/4e90275854504fb472c2e5a1293ffc235a3b1d8d))
+
+### [1.16.8](https://github.com/0xflair/evm-contracts/compare/v1.16.7...v1.16.8) (2022-07-20)
+
+
+### Bug Fixes
+
+* deploy to polygon and rinkeby ([5a3152c](https://github.com/0xflair/evm-contracts/commit/5a3152c7497c0c758b19a76f592a243e6fb76e3d))
+
+### [1.16.7](https://github.com/0xflair/evm-contracts/compare/v1.16.6...v1.16.7) (2022-07-20)
+
+
+### Bug Fixes
+
+* correctly calculate staked duration even if emission end is not set ([48d2303](https://github.com/0xflair/evm-contracts/commit/48d23038b5201f495e96c17812cb75124e6147d4))
+
+### [1.16.6](https://github.com/0xflair/evm-contracts/compare/v1.16.5...v1.16.6) (2022-07-19)
+
+
+### Bug Fixes
+
+* correct init for lockable erc20 tokens ([fda2986](https://github.com/0xflair/evm-contracts/commit/fda29866c6e71574d30714e3653d017cdf3289ac))
+
 ### [1.16.5](https://github.com/0xflair/evm-contracts/compare/v1.16.4...v1.16.5) (2022-07-19)
 
 

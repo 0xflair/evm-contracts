@@ -13,16 +13,18 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "../../../common/WithdrawExtension.sol";
 import "../extensions/ERC721EmissionReleaseExtension.sol";
+import "../extensions/ERC721EqualSplitExtension.sol";
 import "../extensions/ERC721LockedStakingExtension.sol";
 import "../extensions/ERC721LockableClaimExtension.sol";
 
 /**
  * @author Flair (https://flair.finance)
  */
-contract ERC721StakingEmissionStream is
+contract ERC721LockedStakingEmissionStream is
     Initializable,
     Ownable,
     ERC721EmissionReleaseExtension,
+    ERC721EqualSplitExtension,
     ERC721LockedStakingExtension,
     ERC721LockableClaimExtension,
     WithdrawExtension
@@ -30,7 +32,7 @@ contract ERC721StakingEmissionStream is
     using Address for address;
     using Address for address payable;
 
-    string public constant name = "ERC721 Staking Emission Stream";
+    string public constant name = "ERC721 Locked Staking Emission Stream";
 
     string public constant version = "0.1";
 
@@ -39,13 +41,15 @@ contract ERC721StakingEmissionStream is
         address ticketToken;
         uint64 lockedUntilTimestamp;
         // Locked staking extension
-        uint64 minStakingLockTime; // in seconds. Minimum time the NFT must stay locked before unstaking.
+        uint64 minStakingDuration; // in seconds. Minimum time the NFT must stay locked before unstaking.
         uint64 maxStakingTotalDurations; // in seconds. Maximum sum total of all durations staking that will be counted (across all stake/unstakes for each token).
         // Emission release extension
         uint256 emissionRate;
         uint64 emissionTimeUnit;
         uint64 emissionStart;
         uint64 emissionEnd;
+        // Equal split extension
+        uint256 totalTickets;
         // Lockable claim extension
         uint64 claimLockedUntil;
     }
@@ -68,7 +72,7 @@ contract ERC721StakingEmissionStream is
             config.lockedUntilTimestamp
         );
         __ERC721LockedStakingExtension_init(
-            config.minStakingLockTime,
+            config.minStakingDuration,
             config.maxStakingTotalDurations
         );
         __ERC721EmissionReleaseExtension_init(
@@ -77,6 +81,7 @@ contract ERC721StakingEmissionStream is
             config.emissionStart,
             config.emissionEnd
         );
+        __ERC721EqualSplitExtension_init(config.totalTickets);
         __ERC721LockableClaimExtension_init(config.claimLockedUntil);
     }
 
@@ -99,13 +104,20 @@ contract ERC721StakingEmissionStream is
         uint256 totalReleasedAmount_,
         uint256 ticketTokenId_,
         address claimToken_
-    ) internal view virtual override returns (uint256) {
+    )
+        internal
+        view
+        virtual
+        override(ERC721MultiTokenStream, ERC721EqualSplitExtension)
+        returns (uint256)
+    {
         totalReleasedAmount_;
         ticketTokenId_;
         claimToken_;
 
+        // Get the rate per token to calculate based on stake duration
         return
-            emissionRate *
+            (emissionRate / totalTickets) *
             // Intentionally rounded down
             (totalStakedDuration(ticketTokenId_) / emissionTimeUnit);
     }
@@ -117,7 +129,11 @@ contract ERC721StakingEmissionStream is
         override
         returns (uint64)
     {
-        return emissionEnd;
+        if (emissionEnd > 0) {
+            return emissionEnd;
+        }
+
+        return super._stakingTimeLimit();
     }
 
     function _beforeClaim(
@@ -162,5 +178,27 @@ contract ERC721StakingEmissionStream is
         );
 
         super.stake(tokenIds);
+    }
+
+    function rewardAmountByToken(uint256 ticketTokenId)
+        public
+        view
+        virtual
+        returns (uint256)
+    {
+        return
+            (emissionRate * totalStakedDuration(ticketTokenId)) /
+            emissionTimeUnit;
+    }
+
+    function rewardAmountByToken(uint256[] calldata ticketTokenIds)
+        public
+        view
+        virtual
+        returns (uint256 total)
+    {
+        for (uint256 i = 0; i < ticketTokenIds.length; i++) {
+            total += rewardAmountByToken(ticketTokenIds[i]);
+        }
     }
 }
