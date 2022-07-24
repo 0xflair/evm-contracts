@@ -11,7 +11,6 @@ import "../extensions/ERC721ACollectionMetadataExtension.sol";
 import "../extensions/ERC721APerTokenMetadataExtension.sol";
 import "../extensions/ERC721AOneOfOneMintExtension.sol";
 import "../extensions/ERC721AOwnerMintExtension.sol";
-import "../extensions/ERC721AOpenSeaNoGasExtension.sol";
 
 contract ERC721AOneOfOneCollection is
     Initializable,
@@ -21,8 +20,7 @@ contract ERC721AOneOfOneCollection is
     ERC721AOwnerMintExtension,
     ERC721AOneOfOneMintExtension,
     ERC721RoyaltyExtension,
-    ERC2771ContextOwnable,
-    ERC721AOpenSeaNoGasExtension
+    ERC2771ContextOwnable
 {
     struct Config {
         string name;
@@ -31,8 +29,6 @@ contract ERC721AOneOfOneCollection is
         uint256 maxSupply;
         address defaultRoyaltyAddress;
         uint16 defaultRoyaltyBps;
-        address openSeaProxyRegistryAddress;
-        address openSeaExchangeAddress;
         address trustedForwarder;
     }
 
@@ -61,10 +57,6 @@ contract ERC721AOneOfOneCollection is
         __ERC721RoyaltyExtension_init(
             config.defaultRoyaltyAddress,
             config.defaultRoyaltyBps
-        );
-        __ERC721AOpenSeaNoGasExtension_init(
-            config.openSeaProxyRegistryAddress,
-            config.openSeaExchangeAddress
         );
         __ERC2771ContextOwnable_init(config.trustedForwarder);
     }
@@ -108,8 +100,7 @@ contract ERC721AOneOfOneCollection is
             ERC721ACollectionMetadataExtension,
             ERC721AOwnerMintExtension,
             ERC721AOneOfOneMintExtension,
-            ERC721RoyaltyExtension,
-            ERC721AOpenSeaNoGasExtension
+            ERC721RoyaltyExtension
         )
         returns (bool)
     {
@@ -140,18 +131,6 @@ contract ERC721AOneOfOneCollection is
         returns (string memory)
     {
         return ERC721AOneOfOneMintExtension.symbol();
-    }
-
-    /**
-     * Override isApprovedForAll to whitelist user's OpenSea proxy accounts to enable gas-less listings.
-     */
-    function isApprovedForAll(address owner, address operator)
-        public
-        view
-        override(ERC721A, ERC721AOpenSeaNoGasExtension)
-        returns (bool)
-    {
-        return super.isApprovedForAll(owner, operator);
     }
 
     function tokenURI(uint256 _tokenId)
