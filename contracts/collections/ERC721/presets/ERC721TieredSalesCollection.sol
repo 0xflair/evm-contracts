@@ -10,8 +10,7 @@ import "../extensions/ERC721CollectionMetadataExtension.sol";
 import "../extensions/ERC721PrefixedMetadataExtension.sol";
 import "../extensions/ERC721AutoIdMinterExtension.sol";
 import "../extensions/ERC721OwnerMintExtension.sol";
-import "../extensions/ERC721PreSaleExtension.sol";
-import "../extensions/ERC721PublicSaleExtension.sol";
+import "../extensions/ERC721TieringExtension.sol";
 import "../extensions/ERC721SimpleProceedsExtension.sol";
 import "../extensions/ERC721RoleBasedMintExtension.sol";
 import "../extensions/ERC721RoyaltyExtension.sol";
@@ -19,20 +18,17 @@ import "../extensions/ERC721RoleBasedLockableExtension.sol";
 import "../extensions/ERC721BulkifyExtension.sol";
 import "../extensions/ERC721OpenSeaNoGasExtension.sol";
 
-contract ERC721FullFeaturedCollection is
+contract ERC721TieredSalesCollection is
     Ownable,
     ERC165Storage,
     ERC721PrefixedMetadataExtension,
     ERC721OwnerMintExtension,
-    ERC721PreSaleExtension,
-    ERC721PublicSaleExtension,
+    ERC721TieringExtension,
     ERC721SimpleProceedsExtension,
     ERC721RoleBasedMintExtension,
     ERC721RoleBasedLockableExtension,
     ERC721RoyaltyExtension,
-    ERC721OpenSeaNoGasExtension,
-    ERC2771ContextOwnable,
-    ERC721BulkifyExtension
+    ERC2771ContextOwnable
 {
     struct Config {
         string name;
@@ -41,10 +37,7 @@ contract ERC721FullFeaturedCollection is
         string placeholderURI;
         string tokenURIPrefix;
         uint256 maxSupply;
-        uint256 preSalePrice;
-        uint256 preSaleMaxMintPerWallet;
-        uint256 publicSalePrice;
-        uint256 publicSaleMaxMintPerTx;
+        Tier[] tiers;
         address defaultRoyaltyAddress;
         uint16 defaultRoyaltyBps;
         address proceedsRecipient;
@@ -78,25 +71,13 @@ contract ERC721FullFeaturedCollection is
         __ERC721OwnerMintExtension_init();
         __ERC721RoleBasedMintExtension_init(deployer);
         __ERC721RoleBasedLockableExtension_init();
-        __ERC721PreSaleExtension_init_unchained(
-            config.preSalePrice,
-            config.preSaleMaxMintPerWallet
-        );
-        __ERC721PublicSaleExtension_init(
-            config.publicSalePrice,
-            config.publicSaleMaxMintPerTx
-        );
+        __ERC721TieringExtension_init(config.tiers);
         __ERC721SimpleProceedsExtension_init(config.proceedsRecipient);
         __ERC721RoyaltyExtension_init(
             config.defaultRoyaltyAddress,
             config.defaultRoyaltyBps
         );
-        __ERC721OpenSeaNoGasExtension_init(
-            config.openSeaProxyRegistryAddress,
-            config.openSeaExchangeAddress
-        );
         __ERC2771ContextOwnable_init(config.trustedForwarder);
-        __ERC721BulkifyExtension_init();
     }
 
     function _msgSender()
@@ -153,36 +134,19 @@ contract ERC721FullFeaturedCollection is
         virtual
         override(
             ERC165Storage,
+            ERC721AutoIdMinterExtension,
             ERC721PrefixedMetadataExtension,
-            ERC721PreSaleExtension,
-            ERC721PublicSaleExtension,
             ERC721SimpleProceedsExtension,
             ERC721OwnerMintExtension,
             ERC721RoleBasedMintExtension,
             ERC721RoyaltyExtension,
-            ERC721OpenSeaNoGasExtension,
-            ERC721RoleBasedLockableExtension,
-            ERC721BulkifyExtension
+            ERC721RoleBasedLockableExtension
         )
         returns (bool)
     {
         return
             ERC721.supportsInterface(interfaceId) ||
             ERC165Storage.supportsInterface(interfaceId);
-    }
-
-    /**
-     * Override isApprovedForAll to whitelist user's OpenSea proxy accounts to enable gas-less listings.
-     */
-    function isApprovedForAll(address owner, address operator)
-        public
-        view
-        override(ERC721, ERC721OpenSeaNoGasExtension)
-        returns (bool)
-    {
-        return
-            ERC721.isApprovedForAll(owner, operator) ||
-            ERC721OpenSeaNoGasExtension.isApprovedForAll(owner, operator);
     }
 
     function tokenURI(uint256 _tokenId)
@@ -193,41 +157,5 @@ contract ERC721FullFeaturedCollection is
         returns (string memory)
     {
         return ERC721PrefixedMetadataExtension.tokenURI(_tokenId);
-    }
-
-    function getInfo()
-        external
-        view
-        returns (
-            uint256 _maxSupply,
-            uint256 _totalSupply,
-            uint256 _senderBalance,
-            uint256 _preSalePrice,
-            uint256 _preSaleMaxMintPerWallet,
-            uint256 _preSaleAlreadyClaimed,
-            bool _preSaleActive,
-            uint256 _publicSalePrice,
-            uint256 _publicSaleMaxMintPerTx,
-            bool _publicSaleActive
-        )
-    {
-        uint256 balance = 0;
-
-        if (_msgSender() != address(0)) {
-            balance = this.balanceOf(_msgSender());
-        }
-
-        return (
-            maxSupply,
-            this.totalSupply(),
-            balance,
-            preSalePrice,
-            preSaleMaxMintPerWallet,
-            preSaleAllowlistClaimed[_msgSender()],
-            preSaleStatus,
-            publicSalePrice,
-            publicSaleMaxMintPerTx,
-            publicSaleStatus
-        );
     }
 }

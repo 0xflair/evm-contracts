@@ -11,7 +11,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     hre.deployments,
     accounts[0],
     accounts[0],
-    "ERC721FullFeaturedCollection",
+    "ERC721SimpleSalesCollection",
     [
       {
         name: "Collection",
@@ -24,6 +24,30 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         preSaleMaxMintPerWallet: 0,
         publicSalePrice: 0,
         publicSaleMaxMintPerTx: 10,
+        defaultRoyaltyAddress: "0x0000000000000000000000000000000000000000",
+        defaultRoyaltyBps: 0,
+        proceedsRecipient: "0x0000000000000000000000000000000000000000",
+        openSeaProxyRegistryAddress:
+          "0x0000000000000000000000000000000000000000",
+        openSeaExchangeAddress: "0x0000000000000000000000000000000000000000",
+        trustedForwarder: "0x0000000000000000000000000000000000000000",
+      },
+    ]
+  );
+  await deployPermanentContract(
+    hre.deployments,
+    accounts[0],
+    accounts[0],
+    "ERC721TieredSalesCollection",
+    [
+      {
+        name: "Collection",
+        symbol: "COL",
+        contractURI: "ipfs://contractURI",
+        placeholderURI: "ipfs://placeholderURI",
+        tokenURIPrefix: "ipfs://tokenURIPrefix/",
+        maxSupply: 0,
+        tiers: [],
         defaultRoyaltyAddress: "0x0000000000000000000000000000000000000000",
         defaultRoyaltyBps: 0,
         proceedsRecipient: "0x0000000000000000000000000000000000000000",
@@ -79,7 +103,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     hre.deployments,
     accounts[0],
     accounts[0],
-    "ERC721AFullFeaturedCollection",
+    "ERC721ASimpleSalesCollection",
     [
       {
         name: "Collection",
