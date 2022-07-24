@@ -77,8 +77,6 @@ export const deployCollection = async function (
     defaultRoyaltyAddress: "0x0000000000000000000000000000000000000000",
     defaultRoyaltyBps: 250,
     proceedsRecipient: "0x0000000000000000000000000000000000000000",
-    openSeaProxyRegistryAddress: "0x0000000000000000000000000000000000000000",
-    openSeaExchangeAddress: "0x0000000000000000000000000000000000000000",
     trustedForwarder: "0x0000000000000000000000000000000000000000",
     // eslint-disable-next-line
     ...(args || {}),
@@ -154,10 +152,6 @@ describe("ERC721TieredSalesCollection", function () {
             defaultRoyaltyAddress: "0x0000000000000000000000000000000000000000",
             defaultRoyaltyBps: 250,
             proceedsRecipient: "0x0000000000000000000000000000000000000000",
-            openSeaProxyRegistryAddress:
-              "0x0000000000000000000000000000000000000000",
-            openSeaExchangeAddress:
-              "0x0000000000000000000000000000000000000000",
             trustedForwarder: "0x0000000000000000000000000000000000000000",
           },
           userB.signer.address,
@@ -1591,8 +1585,6 @@ describe("ERC721TieredSalesCollection", function () {
       });
 
       // TODO add erc20 payment tests
-
-      // TODO add reservation by tier tests
     });
   });
 });

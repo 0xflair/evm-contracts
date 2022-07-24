@@ -56,12 +56,12 @@ abstract contract ERC721TieringExtension is
 {
     mapping(uint256 => Tier) public tiers;
 
-    mapping(uint256 => mapping(address => uint256)) internal walletMinted;
-
     uint256 public totalReserved;
+
     mapping(uint256 => uint256) public tierMints;
 
-    uint256 internal nonReservedMints;
+    mapping(uint256 => mapping(address => uint256)) internal walletMinted;
+
     uint256 internal reservedMints;
 
     function __ERC721TieringExtension_init(Tier[] memory _tiers)
@@ -219,8 +219,6 @@ abstract contract ERC721TieringExtension is
             proof
         );
 
-        // remaining[x] = supplyRemain - totalReserved + tier[x].reserved - tierMints[x]
-
         require(count <= maxMintable, "TIERING/EXCEEDS_MAX");
         require(
             count <= remainingForTier(tierId),
@@ -243,9 +241,7 @@ abstract contract ERC721TieringExtension is
         walletMinted[tierId][minter] += count;
         tierMints[tierId] += count;
 
-        if (tiers[tierId].reserved == 0) {
-            nonReservedMints += count;
-        } else {
+        if (tiers[tierId].reserved > 0) {
             reservedMints += count;
         }
 

@@ -15,8 +15,6 @@ import "../extensions/ERC721SimpleProceedsExtension.sol";
 import "../extensions/ERC721RoleBasedMintExtension.sol";
 import "../extensions/ERC721RoyaltyExtension.sol";
 import "../extensions/ERC721RoleBasedLockableExtension.sol";
-import "../extensions/ERC721BulkifyExtension.sol";
-import "../extensions/ERC721OpenSeaNoGasExtension.sol";
 
 contract ERC721TieredSalesCollection is
     Ownable,
@@ -41,8 +39,6 @@ contract ERC721TieredSalesCollection is
         address defaultRoyaltyAddress;
         uint16 defaultRoyaltyBps;
         address proceedsRecipient;
-        address openSeaProxyRegistryAddress;
-        address openSeaExchangeAddress;
         address trustedForwarder;
     }
 

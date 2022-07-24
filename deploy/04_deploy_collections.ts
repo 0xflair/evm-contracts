@@ -27,9 +27,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         defaultRoyaltyAddress: "0x0000000000000000000000000000000000000000",
         defaultRoyaltyBps: 0,
         proceedsRecipient: "0x0000000000000000000000000000000000000000",
-        openSeaProxyRegistryAddress:
-          "0x0000000000000000000000000000000000000000",
-        openSeaExchangeAddress: "0x0000000000000000000000000000000000000000",
         trustedForwarder: "0x0000000000000000000000000000000000000000",
       },
     ]
@@ -51,9 +48,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         defaultRoyaltyAddress: "0x0000000000000000000000000000000000000000",
         defaultRoyaltyBps: 0,
         proceedsRecipient: "0x0000000000000000000000000000000000000000",
-        openSeaProxyRegistryAddress:
-          "0x0000000000000000000000000000000000000000",
-        openSeaExchangeAddress: "0x0000000000000000000000000000000000000000",
         trustedForwarder: "0x0000000000000000000000000000000000000000",
       },
     ]
@@ -92,9 +86,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         maxSupply: 0,
         defaultRoyaltyAddress: "0x0000000000000000000000000000000000000000",
         defaultRoyaltyBps: 0,
-        openSeaProxyRegistryAddress:
-          "0x0000000000000000000000000000000000000000",
-        openSeaExchangeAddress: "0x0000000000000000000000000000000000000000",
         trustedForwarder: "0x0000000000000000000000000000000000000000",
       },
     ]
@@ -119,9 +110,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         defaultRoyaltyAddress: "0x0000000000000000000000000000000000000000",
         defaultRoyaltyBps: 0,
         proceedsRecipient: "0x0000000000000000000000000000000000000000",
-        openSeaProxyRegistryAddress:
-          "0x0000000000000000000000000000000000000000",
-        openSeaExchangeAddress: "0x0000000000000000000000000000000000000000",
         trustedForwarder: "0x0000000000000000000000000000000000000000",
       },
     ]
@@ -139,9 +127,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         maxSupply: 0,
         defaultRoyaltyAddress: "0x0000000000000000000000000000000000000000",
         defaultRoyaltyBps: 0,
-        openSeaProxyRegistryAddress:
-          "0x0000000000000000000000000000000000000000",
-        openSeaExchangeAddress: "0x0000000000000000000000000000000000000000",
         trustedForwarder: "0x0000000000000000000000000000000000000000",
       },
     ]
